@@ -1,0 +1,57 @@
+site_name: The Agents Nanny
+site_description: A blog with random topics about agentic AI
+site_url: https://example.com
+site_author: Martin Krasser
+
+theme:
+  name: material
+  logo: assets/gradion.png
+  favicon: assets/gradion.png
+  features:
+    - navigation.indexes
+    - navigation.sections
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - blog:
+      blog_dir: blog
+      post_dir: "{blog}/posts"
+      post_date_format: long
+      post_url_format: "{date}/{slug}"
+      archive_date_format: MMMM yyyy
+      authors: true
+      authors_file: "{blog}/.authors.yml"
+      pagination: true
+      pagination_per_page: 5
+      pagination_url_format: "page/{page}"
+      pagination_format: "$link_previous ~2~ $link_next"
+      pagination_keep_content: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+
+
+nav:
+  - Home: index.md
+  - Blog: 
+    - blog/index.md
