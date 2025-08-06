@@ -43,7 +43,7 @@ Connect your agents to 250+ APIs and 3000+ tools with [model context protocol](h
 ## Example
 
 <video controls>
-  <source src="/agent-authorization/agent-tools.mp4" type="video/mp4">
+  <source src="https://gradion-ai.github.io/agents-nanny/agent-authorization/agent-tools.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
