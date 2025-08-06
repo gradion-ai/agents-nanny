@@ -1,6 +1,6 @@
 site_name: The Agents Nanny
 site_description: A blog with random topics about agentic AI
-site_url: https://example.com
+site_url: https://gradion-ai.github.io/agents-nanny/
 site_author: Martin Krasser
 
 theme:
@@ -12,18 +12,18 @@ theme:
     - navigation.sections
     - content.code.copy
   palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
     - scheme: slate
       primary: indigo
       accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
 
 plugins:
   - search
