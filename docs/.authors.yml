@@ -1,0 +1,10 @@
+authors:
+  martin:
+    name: Martin Krasser
+    description: ML and AI engineer
+    avatar: avatars/martin.png
+    
+  christoph:
+    name: Christoph Stumpf
+    description: ML and AI engineer
+    avatar: avatars/christoph.png
