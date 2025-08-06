@@ -5,4 +5,5 @@ description = "The Agents Nanny Blog"
 requires-python = ">=3.11"
 dependencies = [
     "mkdocs-material==9.6.16",
+    "mkdocs-rss-plugin==1.17.3",
 ]
