@@ -57,6 +57,12 @@ markdown_extensions:
   - attr_list
   - md_in_html
 
+extra:
+  social:
+    - icon: fontawesome/solid/building
+      link: https://gradion.ai
+      name: Gradion AI
 
 nav:
+  - "Home": "https://github.com/gradion-ai/"
   - Blog: index.md
