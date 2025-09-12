@@ -16,7 +16,7 @@ You shouldn't have to build this infrastructure yourself. Connect your agents to
 
 !!! Note 
 
-    I'm not affiliated with Composio, I'm just a happy user. What they do is IMO the right separation of concerns when building agentic applications.
+    I'm not affiliated with Composio, I'm just a happy user. What they do is IMO the right separation of concerns for building agentic applications.
 
 ## Architecture
 
