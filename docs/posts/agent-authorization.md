@@ -8,11 +8,11 @@ categories:
 
 # Agent Authorization Without the Pain
 
-Your agent needs to read from your Google Calendar and send emails through Gmail. Simple, right? Until you realize you need OAuth flows, token refresh logic, and secure credential storage. Multiply that by every API your agent needs.
+Your agent needs to read from your Google Calendar and send emails through Gmail. This seemingly simple requirement quickly becomes complex when you realize you need OAuth flows, token refresh logic, and secure credential storage. Multiply that by every API your agent needs.
+
+You shouldn't have to build this infrastructure yourself. Connect your agents to 250+ APIs and 3000+ tools with [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) and [Composio](https://composio.dev/). Composio handles authorization, remote MCP servers and tool execution, while your application focuses on agentic reasoning and tool usage.
 
 <!-- more -->
-
-Connect your agents to 250+ APIs and 3000+ tools with [model context protocol](https://modelcontextprotocol.io/) (MCP) and [Composio](https://composio.dev/). Composio handles authorization, remote MCP servers and tool execution, your application focuses on agentic reasoning and tool usage. 
 
 !!! Note 
 
