@@ -16,7 +16,7 @@ You shouldn't have to build this infrastructure yourself. Connect your agents to
 
 !!! Note 
 
-    I'm not affiliated with Composio, I'm just a happy user. What they do is IMO the right separation of concerns for building agentic applications.
+    I'm not affiliated with Composio, I'm just a happy user. Their approach supports a useful separation of concerns between agent logic and API integration in agentic applications.
 
 ## Architecture
 
@@ -31,7 +31,7 @@ You shouldn't have to build this infrastructure yourself. Connect your agents to
 **Composio Layer**
 
 - MCP servers act as protocol bridges to external APIs
-- Each API has auth configs, with a connected account per user
+- Each API has an auth config, with a connected account per user
 - Auth tokens are stored securely, supporting OAuth2, API keys, etc.
 
 **Key Benefits**
