@@ -12,11 +12,11 @@
         <meta name="author" content="Martin Krasser">
       
       
-        <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/2025/08/06/agent-authorization-without-the-pain/">
+        <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/2025/11/12/from-single-user-to-multi-party-conversational-ai/">
       
       
+        <link rel="prev" href="../../../08/06/agent-authorization-without-the-pain/">
       
-        <link rel="next" href="../../../11/12/from-single-user-to-multi-party-conversational-ai/">
       
       
         <link rel="alternate" type="application/rss+xml" title="RSS feed" href="../../../../feed_rss_created.xml">
@@ -27,7 +27,7 @@
     
     
       
-        <title>Agent Authorization Without the Pain - The Agents Nanny</title>
+        <title>From Single-User to Multi-Party Conversational AI - The Agents Nanny</title>
       
     
     
@@ -79,7 +79,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#agent-authorization-without-the-pain" class="md-skip">
+        <a href="#from-single-user-to-multi-party-conversational-ai" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Agent Authorization Without the Pain
+              From Single-User to Multi-Party Conversational AI
             
           </span>
         </div>
@@ -492,18 +492,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture" class="md-nav__link">
+  <a href="#an-architectural-approach" class="md-nav__link">
     <span class="md-ellipsis">
-      Architecture
+      An Architectural Approach
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#reference-implementations" class="md-nav__link">
     <span class="md-ellipsis">
-      Example
+      Reference Implementations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-challenges" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Challenges
     </span>
   </a>
   
@@ -565,7 +574,7 @@
                     <li class="md-nav__item">
                       <div class="md-nav__link">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 19H5V8h14m-3-7v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-1V1m-1 11h-5v5h5z"/></svg>
-                        <time datetime="2025-08-06 00:00:00+00:00" class="md-ellipsis">August 6, 2025</time>
+                        <time datetime="2025-11-12 00:00:00+00:00" class="md-ellipsis">November 12, 2025</time>
                       </div>
                     </li>
                     
@@ -576,7 +585,7 @@
                           <span class="md-ellipsis">
                             in
                             
-                              <a href="../../../../category/agent-authorization/">Agent authorization</a></span>
+                              <a href="../../../../category/group-assistance/">Group assistance</a></span>
                         </div>
                       </li>
                     
@@ -611,99 +620,33 @@
 
 
 
-<h1 id="agent-authorization-without-the-pain">Agent Authorization Without the Pain</h1>
-<p>Your agent needs to read from your Google Calendar and send emails through Gmail. This seemingly simple requirement quickly becomes complex when you realize you need OAuth flows, token refresh logic, and secure credential storage. Multiply that by every API your agent needs.</p>
-<p>You shouldn't have to build this infrastructure yourself. Connect your agents to 250+ APIs and 3000+ tools with <a href="https://modelcontextprotocol.io/">Model Context Protocol</a> (MCP) and <a href="https://composio.dev/">Composio</a>. Composio handles authorization, remote MCP servers and tool execution, while your application focuses on agentic reasoning and tool usage.</p>
+<h1 id="from-single-user-to-multi-party-conversational-ai">From Single-User to Multi-Party Conversational AI</h1>
+<p>Single-user AI agents excel at responding to direct queries in one-on-one interactions. A user sends the agent a self-contained query with sufficient context, and the agent processes it directly. Even in group chats, the typical pattern remains the same: users mention the agent with a direct query. This interaction model treats multi-user environments as collections of individual exchanges rather than true multi-party conversations.</p>
+<p>Multi-party conversational AI systems, on the other hand, must derive agent queries from more complex exchanges between multiple participants. This requires detecting meaningful patterns while knowing when to stay silent. For example, when a conversation stalls on a decision, the system detects that and suggests resolutions based on available agent capabilities. Single-user agents respond to every input, but multi-party AI must engage only when specific patterns emerge.</p>
 <!-- more -->
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>I'm not affiliated with Composio, I'm just a happy user. Their approach supports a useful separation of concerns between agent logic and API integration in agentic applications.</p>
-</div>
-<h2 id="architecture">Architecture</h2>
-<p><img alt="architecture" src="../../../../agent-authorization/architecture.png" /></p>
-<p><strong>Your Application</strong></p>
+<h2 id="an-architectural-approach">An Architectural Approach</h2>
+<p>Modifying existing single-user agents through fine-tuning or prompting does not scale. The solution lies in enabling single-user agents to participate in multi-party conversations without requiring modification to the agents themselves. This requires a separate integration layer between group chat and downstream agents.</p>
+<p>This layer detects patterns in group conversations and transforms them into self-contained queries that single-user agents can process. The layer monitors the conversation, identifies when specific engagement criteria are met, and translates the relevant context into actionable agent requests. For example, when a factual contradiction emerges, it initiates a fact check and informs the group of the result.</p>
+<p>Engagement criteria vary significantly across applications and should evolve based on group feedback. The layer must support flexible definition of custom criteria in natural language, processed by a reasoning model. It must also provide a feedback mechanism to update the criteria. It acts as a specialized adapter ("group reasoner") between group chat and downstream AI agents, implementing group engagement logic through pattern detection and query transformation.</p>
+<figure>
+<p><img alt="Title" src="../../../../multi-party-ai/reasoner-light.png#only-light" width="80%" />
+  <img alt="Title" src="../../../../multi-party-ai/reasoner-dark.png#only-dark" width="80%" /></p>
+</figure>
+<h2 id="reference-implementations">Reference Implementations</h2>
+<p>Reference implementations of this architectural pattern are provided by the open-source projects Group Sense, Group Genie, and Hybrid Groups.</p>
+<p><a href="https://gradion-ai.github.io/group-sense/">Group Sense</a> provides the group reasoner component. It detects patterns in group chat messages and transforms them into queries for AI systems. The library supports both shared, single-threaded reasoning and concurrent reasoning across group members. Concurrent reasoners process group context redundantly but scale better to larger, highly active groups.</p>
+<p><a href="https://gradion-ai.github.io/group-genie/">Group Genie</a> combines the group reasoner with an agent integration layer. It enables single-user AI agents to participate in group chat conversations without requiring modification to the agents themselves. It routes generated queries to agents and responses to dynamically determined recipients. Agents can be built on any technology stack and are integrated through a simple interface.</p>
+<p><a href="https://gradion-ai.github.io/hybrid-groups/">Hybrid Groups</a> demonstrates this approach in production environments by integrating Group Genie into Slack and GitHub. A group session corresponds to a thread in Slack or an issue or a pull request in GitHub. The Slack integration supports custom definition of engagement criteria per channel.</p>
+<h2 id="additional-challenges">Additional Challenges</h2>
+<p>Pattern detection, query transformation, and recipient determination address core requirements for multi-party conversational AI, but additional challenges remain. Agents must be able to act on behalf of individual group members, particularly when following member-specific instructions rather than general group requests.</p>
+<p>Beyond these implementation concerns, additional research areas are relevant. Further aspects are covered in this selected list of papers:</p>
 <ul>
-<li>Agents connect to Composio MCP servers and use their tools</li>
-<li>Agents act on behalf of users that authorized API access</li>
-<li>Agents focus on reasoning and tool usage, not plumbing</li>
+<li><a href="https://arxiv.org/abs/2509.16325">Overhearing LLM Agents: A Survey, Taxonomy, and Roadmap</a>: AI agents that monitor ambient conversations unobtrusively and provide contextual assistance without interrupting the flow of discussion.</li>
+<li><a href="https://arxiv.org/abs/2505.18845">Multi-Party Conversational Agents: A Survey</a>: Modeling the mental state of participants, understanding group dialogue content, and predicting conversation flow.</li>
+<li><a href="https://arxiv.org/abs/2401.04883">Multi-User Chat Assistant (MUCA)</a>: Group conversational AI that determines what to say, when to respond, and who to address through three coordinated modules.</li>
+<li><a href="https://arxiv.org/abs/2310.20479">Multi-User MultiWOZ: Task-Oriented Dialogues among Multiple Users</a>: A method for supporting task-oriented dialogues where multiple users collaboratively make decisions with an agent, including multi-user contextual query rewriting to convert user chats into consumable system queries.</li>
 </ul>
-<p><strong>Composio Layer</strong></p>
-<ul>
-<li>MCP servers act as protocol bridges to external APIs</li>
-<li>Each API has an auth config, with a connected account per user</li>
-<li>Auth tokens are stored securely, supporting OAuth2, API keys, etc.</li>
-</ul>
-<p><strong>Key Benefits</strong></p>
-<ul>
-<li>No OAuth flows or token management in your code</li>
-<li>Access 250+ APIs and 3000+ tools through MCP</li>
-<li>Clean separation between agent logic and API integration</li>
-</ul>
-<h2 id="example">Example</h2>
-<video controls>
-  <source src="https://gradion-ai.github.io/agents-nanny/agent-authorization/agent-tools.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-<p>The complete code is at <a href="https://github.com/krasserm/agent-auth">github.com/krasserm/agent-auth</a>. What follows is an overview of the key steps needed to authorize an agent to use Google Calendar on behalf of a user:</p>
-<p>Install the <a href="https://github.com/ComposioHQ/composio-base-py">Composio Python library</a>, used to access the <a href="https://docs.composio.dev/api-reference">Composio REST API</a>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>composio-client
-</code></pre></div>
-<p>Create an auth configuration for the <a href="https://docs.composio.dev/toolkits/googlecalendar">googlecalendar</a> toolkit, using <code>OAUTH2</code> as <code>authScheme</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">client</span> <span class="o">=</span> <span class="n">Composio</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;COMPOSIO_API_KEY&quot;</span><span class="p">))</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">auth_configs</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">toolkit</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;slug&quot;</span><span class="p">:</span> <span class="s2">&quot;googlecalendar&quot;</span><span class="p">},</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">auth_config</span><span class="o">=</span><span class="p">{</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;calendar-example&quot;</span><span class="p">,</span> 
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;use_composio_managed_auth&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="s2">&quot;authScheme&quot;</span><span class="p">:</span> <span class="s2">&quot;OAUTH2&quot;</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="p">}</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">)</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">auth_config_id</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">auth_config</span><span class="o">.</span><span class="n">id</span>
-</code></pre></div>
-<p>Add a connected account to the auth config and link a <code>user_id</code> to it. That's the id of a user managed by your application, not by Composio.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">connected_accounts</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">auth_config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">auth_config_id</span><span class="p">},</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">connection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;martin&quot;</span><span class="p">},</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">)</span>
-</code></pre></div>
-<p>Initiate the authorization process by redirecting to an OAuth consent screen in a browser window. After completion, the connected account is authorized to use Google Calendar on behalf of the user who granted access.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">webbrowser</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">connection_data</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">redirect_url</span><span class="p">)</span>
-</code></pre></div>
-<p>Create an MCP server for the auth config created in step 2 and specify the tools that should be exposed.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">mcp</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;calendar-mcp-server&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">auth_config_ids</span><span class="o">=</span><span class="p">[</span><span class="n">auth_config_id</span><span class="p">],</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">allowed_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GOOGLECALENDAR_FIND_EVENT&quot;</span><span class="p">]</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">)</span>
-</code></pre></div>
-<p>Create an MCP server URL that uses the connected account linked to <code>martin</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">mcp_url</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">mcp_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;transport=sse&quot;</span><span class="p">,</span> <span class="s2">&quot;user_id=martin&quot;</span><span class="p">)</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># i.e. https://mcp.composio.dev/composio/server/&lt;uuid&gt;?user_id=martin</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># &lt;uuid&gt; is a string of pattern 12345678-90ab-cdef-1234-567890abcdef</span>
-</code></pre></div>
-<p>Configure a <a href="https://ai.pydantic.dev/">Pydantic AI</a> agent with the <code>mcp_url</code> so that it can use Google Calendar on behalf of the user who granted access in step 4.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic_ai</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic_ai.mcp</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCPServerStreamableHTTP</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="s1">&#39;openai:o4-mini&#39;</span><span class="p">,</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">toolsets</span><span class="o">=</span><span class="p">[</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="n">MCPServerStreamableHTTP</span><span class="p">(</span><span class="n">mcp_url</span><span class="p">),</span>  
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="p">]</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">)</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="k">async</span> <span class="k">with</span> <span class="n">agent</span><span class="p">:</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        <span class="s2">&quot;List my Sep 2025 calendar events&quot;</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    <span class="p">)</span>
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
-</code></pre></div>
 
 
 
