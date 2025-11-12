@@ -492,9 +492,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#an-architectural-approach" class="md-nav__link">
+  <a href="#architectural-approach" class="md-nav__link">
     <span class="md-ellipsis">
-      An Architectural Approach
+      Architectural Approach
     </span>
   </a>
   
@@ -625,13 +625,13 @@
 <p>Multi-party conversational AI systems, on the other hand, must derive agent queries from more complex exchanges between multiple participants. This requires detecting meaningful patterns while knowing when to stay silent. For example, when a conversation stalls on a decision, the system detects that and suggests resolutions based on available agent capabilities. Single-user agents respond to every input, but multi-party AI must engage only when specific patterns emerge.</p>
 <!-- more -->
 
-<h2 id="an-architectural-approach">An Architectural Approach</h2>
+<h2 id="architectural-approach">Architectural Approach</h2>
 <p>Modifying existing single-user agents through fine-tuning or prompting does not scale. The solution lies in enabling single-user agents to participate in multi-party conversations without requiring modification to the agents themselves. This requires a separate integration layer between group chat and downstream agents.</p>
 <p>This layer detects patterns in group conversations and transforms them into self-contained queries that single-user agents can process. The layer monitors the conversation, identifies when specific engagement criteria are met, and translates the relevant context into actionable agent requests. For example, when a factual contradiction emerges, it initiates a fact check and informs the group of the result.</p>
 <p>Engagement criteria vary significantly across applications and should evolve based on group feedback. The layer must support flexible definition of custom criteria in natural language, processed by a reasoning model. It must also provide a feedback mechanism to update the criteria. It acts as a specialized adapter ("group reasoner") between group chat and downstream AI agents, implementing group engagement logic through pattern detection and query transformation.</p>
 <figure>
-<p><img alt="Title" src="../../../../multi-party-ai/reasoner-light.png#only-light" width="80%" />
-  <img alt="Title" src="../../../../multi-party-ai/reasoner-dark.png#only-dark" width="80%" /></p>
+<p><img alt="Group reasoner" src="../../../../multi-party-ai/reasoner-light.png#only-light" width="80%" />
+  <img alt="Group reasoner" src="../../../../multi-party-ai/reasoner-dark.png#only-dark" width="80%" /></p>
 </figure>
 <h2 id="reference-implementations">Reference Implementations</h2>
 <p>Reference implementations of this architectural pattern are provided by the open-source projects Group Sense, Group Genie, and Hybrid Groups.</p>
