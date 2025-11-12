@@ -1,3 +1,3 @@
 # The Agents Nanny
 
-A blog about agentic AI.
+A blog with random topics about ML and AI.
