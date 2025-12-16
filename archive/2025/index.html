@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/archive/2025/">
       
       
-        <link rel="prev" href="../../category/group-assistance/">
+        <link rel="prev" href="../../category/programmatic-tool-calling/">
       
       
       
@@ -27,7 +27,7 @@
     
     
       
-        <title>November 2025 - The Agents Nanny</title>
+        <title>2025 - The Agents Nanny</title>
       
     
     
@@ -79,7 +79,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#november-2025" class="md-skip">
+        <a href="#2025" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              November 2025
+              2025
             
           </span>
         </div>
@@ -348,7 +348,7 @@
   
   
   <span class="md-ellipsis">
-    November 2025
+    2025
     
   </span>
   
@@ -375,6 +375,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -450,12 +454,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../category/code-actions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Code actions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+  
+  
+    <li class="md-nav__item">
       <a href="../../category/group-assistance/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     Group assistance
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+  
+  
+    <li class="md-nav__item">
+      <a href="../../category/programmatic-tool-calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Programmatic tool calling
     
   </span>
   
@@ -503,8 +557,57 @@
   <div class="md-content" data-md-component="content">
     <div class="md-content__inner">
       <header class="md-typeset">
-        <h1 id="november-2025">November 2025</h1>
+        <h1 id="2025">2025</h1>
       </header>
+      
+        <article class="md-post md-post--excerpt">
+  <header class="md-post__header">
+    
+      <nav class="md-post__authors md-typeset">
+        
+          <span class="md-author">
+            <img src="../../avatars/martin.png" alt="Martin Krasser">
+          </span>
+        
+      </nav>
+    
+    <div class="md-post__meta md-meta">
+      <ul class="md-meta__list">
+        <li class="md-meta__item">
+          <time datetime="2025-12-16 00:00:00+00:00">December 16, 2025</time></li>
+        
+          <li class="md-meta__item">
+            in
+            
+              <a href="../../category/code-actions/" class="md-meta__link">Code actions</a>, 
+              <a href="../../category/programmatic-tool-calling/" class="md-meta__link">Programmatic tool calling</a></li>
+        
+        
+          
+          <li class="md-meta__item">
+            
+              6 min read
+            
+          </li>
+        
+      </ul>
+      
+    </div>
+  </header>
+  <div class="md-post__content md-typeset">
+    <h2 id="code-actions-as-tools-evolving-tool-libraries-for-agents"><a class="toclink" href="../../2025/12/16/code-actions-as-tools-evolving-tool-libraries-for-agents/">Code Actions as Tools: Evolving Tool Libraries for Agents</a></h2>
+<p>Programmatic tool calling is gaining traction in agent development. Instead of emitting one JSON tool call at a time, agents generate executable "code actions" that call tools in a sandboxed environment. This pattern is inspired by Apple's <a href="https://machinelearning.apple.com/research/codeact">CodeAct</a> and appears in many agentic systems. More <a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling">recent</a> <a href="https://blog.cloudflare.com/code-mode/">implementations</a> increasingly focus on programmatic calling of MCP tools.</p>
+<p>These solutions typically generate Python or TypeScript APIs for MCP tools, let an agent write code actions that call these APIs, execute the code in a sandboxed environment, and feed results back to the agent. This improves performance compared to JSON-based approaches, but it often misses an important point: a generated code action can itself become a tool, available for reuse in later code actions.</p>
+
+    
+      <nav class="md-post__action">
+        <a href="../../2025/12/16/code-actions-as-tools-evolving-tool-libraries-for-agents/">
+          Continue reading
+        </a>
+      </nav>
+    
+  </div>
+</article>
       
         <article class="md-post md-post--excerpt">
   <header class="md-post__header">
