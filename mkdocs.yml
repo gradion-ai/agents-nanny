@@ -5,25 +5,19 @@ site_author: Martin Krasser
 
 theme:
   name: material
-  logo: assets/gradion.png
-  favicon: assets/gradion.png
+  logo: images/logo.png
+  favicon: images/logo.png
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
     - navigation.indexes
     - navigation.sections
     - content.code.copy
   palette:
-    - scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
+    scheme: slate
+    primary: custom
+    accent: custom
 
 plugins:
   - search
@@ -63,6 +57,9 @@ extra:
     - icon: fontawesome/solid/building
       link: https://gradion.ai
       name: Gradion AI
+
+extra_css:
+  - stylesheets/extra.css
 
 nav:
   - "Home": "https://github.com/gradion-ai/"
