@@ -51,7 +51,7 @@ Register this MCP server at ipybox under name github
 }
 ```
 
-ipybox then generates one module per tool, such as [search_repositories](https://github.com/gradion-ai/ipybox/blob/main/docs/generated/mcptools/github/search_repositories_orig.py) or [list_commits](https://github.com/gradion-ai/ipybox/blob/main/docs/generated/mcptools/github/list_commits.py). Each generated module exposes a `run()` function to invoke the MCP tool, and a typed input parameter model:
+ipybox then generates one module per tool, such as [`search_repositories`](https://github.com/gradion-ai/ipybox/blob/main/docs/generated/mcptools/github/search_repositories_orig.py) or [`list_commits`](https://github.com/gradion-ai/ipybox/blob/main/docs/generated/mcptools/github/list_commits.py). Each generated module exposes a `run()` function to invoke the MCP tool, and a typed input parameter model:
 
 ```python title="search_repositories API"
 class Params(BaseModel):
@@ -140,7 +140,7 @@ Save this as code action under github category with name commits_of_top_repos.
 Make username, top_n_repos and last_n_commits parameters.
 ```
 
-A key design choice here is to separate interface from implementation. The interface is defined in a [commits_of_top_repos.api](https://github.com/gradion-ai/ipybox/blob/main/docs/generated/gentools/github/commits_of_top_repos/api.py) module, the implementation in [commits_of_top_repos.impl](https://github.com/gradion-ai/ipybox/blob/main/docs/generated/gentools/github/commits_of_top_repos/impl.py). The plugin's code action skill instructs the agent to follow this structure.
+A key design choice here is to separate interface from implementation. The interface is defined in a [`commits_of_top_repos.api`](https://github.com/gradion-ai/ipybox/blob/main/docs/generated/gentools/github/commits_of_top_repos/api.py) module, the implementation in [`commits_of_top_repos.impl`](https://github.com/gradion-ai/ipybox/blob/main/docs/generated/gentools/github/commits_of_top_repos/impl.py). The plugin's code action skill instructs the agent to follow this structure.
 
 The API module defines a parameterized `run()` function, output types, and a tool description via a docstring:
 
