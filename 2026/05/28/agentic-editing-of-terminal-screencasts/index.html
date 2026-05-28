@@ -12,7 +12,7 @@
         <meta name="author" content="Martin Krasser">
       
       
-        <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/2026/05/28/editing-terminal-screencasts-in-natural-language/">
+        <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/2026/05/28/agentic-editing-of-terminal-screencasts/">
       
       
         <link rel="prev" href="../../../../2025/12/16/code-actions-as-tools-evolving-tool-libraries-for-agents/">
@@ -27,7 +27,7 @@
     
     
       
-        <title>Editing terminal screencasts in natural language - The Agents Nanny</title>
+        <title>Agentic editing of terminal screencasts - The Agents Nanny</title>
       
     
     
@@ -79,7 +79,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#editing-terminal-screencasts-in-natural-language" class="md-skip">
+        <a href="#agentic-editing-of-terminal-screencasts" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Editing terminal screencasts in natural language
+              Agentic editing of terminal screencasts
             
           </span>
         </div>
@@ -674,7 +674,7 @@
 
 
 
-<h1 id="editing-terminal-screencasts-in-natural-language">Editing terminal screencasts in natural language</h1>
+<h1 id="agentic-editing-of-terminal-screencasts">Agentic editing of terminal screencasts</h1>
 <p><a href="https://asciinema.org/">asciinema</a> is naturally suited to agentic screencast editing. A <code>.cast</code> recording is plain text (JSON Lines), one event per line of the form <code>[interval, code, data]</code>, where <code>interval</code> is seconds since the previous event. Editing reduces to arithmetic on those intervals (and optionally to substitution on the payloads, e.g. for redaction), so a small tool can expose trimming, speeding, and cutting as cheap operations that a language model can reason about and combine.</p>
 <p>As a demonstration, I recorded an ~85-minute Claude Code session running an ML fine-tuning task with the <a href="https://github.com/krasserm/ml-plugins">ml-research plugin</a> and turned it into a 40-second GIF of the highlights without leaving Claude Code. The edit was driven by short natural-language instructions and one custom skill (<a href="https://gist.github.com/krasserm/d745bd99013da875258dd495bf967a2d"><code>cast-edit</code></a>) that wraps the format with a small <a href="https://gist.github.com/krasserm/d745bd99013da875258dd495bf967a2d#file-castedit-py">Python tool</a>.</p>
 <!-- more -->
