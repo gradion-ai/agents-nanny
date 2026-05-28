@@ -271,6 +271,8 @@
       
         
       
+        
+      
     
     
     
@@ -306,6 +308,31 @@
             Archive
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    
+  
+  
+    <li class="md-nav__item">
+      <a href="archive/2026/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    2026
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -531,6 +558,49 @@
       <header class="md-typeset">
         <h1 id="blog">Blog</h1>
       </header>
+      
+        <article class="md-post md-post--excerpt">
+  <header class="md-post__header">
+    
+      <nav class="md-post__authors md-typeset">
+        
+          <span class="md-author">
+            <img src="avatars/martin.png" alt="Martin Krasser">
+          </span>
+        
+      </nav>
+    
+    <div class="md-post__meta md-meta">
+      <ul class="md-meta__list">
+        <li class="md-meta__item">
+          <time datetime="2026-05-28 00:00:00+00:00">May 28, 2026</time></li>
+        
+        
+          
+          <li class="md-meta__item">
+            
+              4 min read
+            
+          </li>
+        
+      </ul>
+      
+    </div>
+  </header>
+  <div class="md-post__content md-typeset">
+    <h2 id="editing-terminal-screencasts-in-natural-language"><a class="toclink" href="2026/05/28/editing-terminal-screencasts-in-natural-language/">Editing terminal screencasts in natural language</a></h2>
+<p><a href="https://asciinema.org/">asciinema</a> is naturally suited to agentic screencast editing. A <code>.cast</code> recording is plain text (JSON Lines), one event per line of the form <code>[interval, code, data]</code>, where <code>interval</code> is seconds since the previous event. Editing reduces to arithmetic on those intervals (and optionally to substitution on the payloads, e.g. for redaction), so a small tool can expose trimming, speeding, and cutting as cheap operations that a language model can reason about and combine.</p>
+<p>As a demonstration, I recorded an ~85-minute Claude Code session running an ML fine-tuning task with the <a href="https://github.com/krasserm/ml-plugins">ml-research plugin</a> and turned it into a 40-second GIF of the highlights without leaving Claude Code. The edit was driven by short natural-language instructions and one custom skill (<a href="https://gist.github.com/krasserm/d745bd99013da875258dd495bf967a2d"><code>cast-edit</code></a>) that wraps the format with a small <a href="https://gist.github.com/krasserm/d745bd99013da875258dd495bf967a2d#file-castedit-py">Python tool</a>.</p>
+
+    
+      <nav class="md-post__action">
+        <a href="2026/05/28/editing-terminal-screencasts-in-natural-language/">
+          Continue reading
+        </a>
+      </nav>
+    
+  </div>
+</article>
       
         <article class="md-post md-post--excerpt">
   <header class="md-post__header">

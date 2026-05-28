@@ -12,11 +12,11 @@
         <meta name="author" content="Martin Krasser">
       
       
-        <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/2025/08/06/agent-authorization-without-the-pain/">
+        <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/2026/05/28/editing-terminal-screencasts-in-natural-language/">
       
       
+        <link rel="prev" href="../../../../2025/12/16/code-actions-as-tools-evolving-tool-libraries-for-agents/">
       
-        <link rel="next" href="../../../11/12/from-single-user-to-multi-party-conversational-ai/">
       
       
         <link rel="alternate" type="application/rss+xml" title="RSS feed" href="../../../../feed_rss_created.xml">
@@ -27,7 +27,7 @@
     
     
       
-        <title>Agent Authorization Without the Pain - The Agents Nanny</title>
+        <title>Editing terminal screencasts in natural language - The Agents Nanny</title>
       
     
     
@@ -79,7 +79,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#agent-authorization-without-the-pain" class="md-skip">
+        <a href="#editing-terminal-screencasts-in-natural-language" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Agent Authorization Without the Pain
+              Editing terminal screencasts in natural language
             
           </span>
         </div>
@@ -547,18 +547,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture" class="md-nav__link">
+  <a href="#the-session" class="md-nav__link">
     <span class="md-ellipsis">
-      Architecture
+      The session
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#the-edit" class="md-nav__link">
     <span class="md-ellipsis">
-      Example
+      The edit
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      The result
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-made-it-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      What made it work
     </span>
   </a>
   
@@ -620,20 +638,10 @@
                     <li class="md-nav__item">
                       <div class="md-nav__link">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 19H5V8h14m-3-7v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-1V1m-1 11h-5v5h5z"/></svg>
-                        <time datetime="2025-08-06 00:00:00+00:00" class="md-ellipsis">August 6, 2025</time>
+                        <time datetime="2026-05-28 00:00:00+00:00" class="md-ellipsis">May 28, 2026</time>
                       </div>
                     </li>
                     
-                    
-                      <li class="md-nav__item">
-                        <div class="md-nav__link">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 3v15h3V3zm3 2 4 13 3-1-4-13zM5 5v13h3V5zM3 19v2h18v-2z"/></svg>
-                          <span class="md-ellipsis">
-                            in
-                            
-                              <a href="../../../../category/agent-authorization/">Agent authorization</a></span>
-                        </div>
-                      </li>
                     
                     
                       
@@ -642,7 +650,7 @@
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 20a8 8 0 0 0 8-8 8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10 10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"/></svg>
                           <span class="md-ellipsis">
                             
-                              3 min read
+                              4 min read
                             
                           </span>
                         </div>
@@ -666,99 +674,83 @@
 
 
 
-<h1 id="agent-authorization-without-the-pain">Agent Authorization Without the Pain</h1>
-<p>Your agent needs to read from your Google Calendar and send emails through Gmail. This seemingly simple requirement quickly becomes complex when you realize you need OAuth flows, token refresh logic, and secure credential storage. Multiply that by every API your agent needs.</p>
-<p>You shouldn't have to build this infrastructure yourself. Connect your agents to 250+ APIs and 3000+ tools with <a href="https://modelcontextprotocol.io/">Model Context Protocol</a> (MCP) and <a href="https://composio.dev/">Composio</a>. Composio handles authorization, remote MCP servers and tool execution, while your application focuses on agentic reasoning and tool usage.</p>
+<h1 id="editing-terminal-screencasts-in-natural-language">Editing terminal screencasts in natural language</h1>
+<p><a href="https://asciinema.org/">asciinema</a> is naturally suited to agentic screencast editing. A <code>.cast</code> recording is plain text (JSON Lines), one event per line of the form <code>[interval, code, data]</code>, where <code>interval</code> is seconds since the previous event. Editing reduces to arithmetic on those intervals (and optionally to substitution on the payloads, e.g. for redaction), so a small tool can expose trimming, speeding, and cutting as cheap operations that a language model can reason about and combine.</p>
+<p>As a demonstration, I recorded an ~85-minute Claude Code session running an ML fine-tuning task with the <a href="https://github.com/krasserm/ml-plugins">ml-research plugin</a> and turned it into a 40-second GIF of the highlights without leaving Claude Code. The edit was driven by short natural-language instructions and one custom skill (<a href="https://gist.github.com/krasserm/d745bd99013da875258dd495bf967a2d"><code>cast-edit</code></a>) that wraps the format with a small <a href="https://gist.github.com/krasserm/d745bd99013da875258dd495bf967a2d#file-castedit-py">Python tool</a>.</p>
 <!-- more -->
 
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>I'm not affiliated with Composio, I'm just a happy user. Their approach supports a useful separation of concerns between agent logic and API integration in agentic applications.</p>
-</div>
-<h2 id="architecture">Architecture</h2>
-<p><img alt="architecture" src="../../../../agent-authorization/architecture.png" /></p>
-<p><strong>Your Application</strong></p>
-<ul>
-<li>Agents connect to Composio MCP servers and use their tools</li>
-<li>Agents act on behalf of users that authorized API access</li>
-<li>Agents focus on reasoning and tool usage, not plumbing</li>
-</ul>
-<p><strong>Composio Layer</strong></p>
-<ul>
-<li>MCP servers act as protocol bridges to external APIs</li>
-<li>Each API has an auth config, with a connected account per user</li>
-<li>Auth tokens are stored securely, supporting OAuth2, API keys, etc.</li>
-</ul>
-<p><strong>Key Benefits</strong></p>
-<ul>
-<li>No OAuth flows or token management in your code</li>
-<li>Access 250+ APIs and 3000+ tools through MCP</li>
-<li>Clean separation between agent logic and API integration</li>
-</ul>
-<h2 id="example">Example</h2>
-<video controls>
-  <source src="https://gradion-ai.github.io/agents-nanny/agent-authorization/agent-tools.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-<p>The complete code is at <a href="https://github.com/krasserm/agent-auth">github.com/krasserm/agent-auth</a>. What follows is an overview of the key steps needed to authorize an agent to use Google Calendar on behalf of a user:</p>
-<p>Install the <a href="https://github.com/ComposioHQ/composio-base-py">Composio Python library</a>, used to access the <a href="https://docs.composio.dev/api-reference">Composio REST API</a>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>composio-client
-</code></pre></div>
-<p>Create an auth configuration for the <a href="https://docs.composio.dev/toolkits/googlecalendar">googlecalendar</a> toolkit, using <code>OAUTH2</code> as <code>authScheme</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">client</span> <span class="o">=</span> <span class="n">Composio</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;COMPOSIO_API_KEY&quot;</span><span class="p">))</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">auth_configs</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">toolkit</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;slug&quot;</span><span class="p">:</span> <span class="s2">&quot;googlecalendar&quot;</span><span class="p">},</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">auth_config</span><span class="o">=</span><span class="p">{</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;calendar-example&quot;</span><span class="p">,</span> 
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;use_composio_managed_auth&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="s2">&quot;authScheme&quot;</span><span class="p">:</span> <span class="s2">&quot;OAUTH2&quot;</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="p">}</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">)</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">auth_config_id</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">auth_config</span><span class="o">.</span><span class="n">id</span>
-</code></pre></div>
-<p>Add a connected account to the auth config and link a <code>user_id</code> to it. That's the id of a user managed by your application, not by Composio.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">connected_accounts</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">auth_config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">auth_config_id</span><span class="p">},</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">connection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;martin&quot;</span><span class="p">},</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">)</span>
-</code></pre></div>
-<p>Initiate the authorization process by redirecting to an OAuth consent screen in a browser window. After completion, the connected account is authorized to use Google Calendar on behalf of the user who granted access.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">webbrowser</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">connection_data</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">redirect_url</span><span class="p">)</span>
-</code></pre></div>
-<p>Create an MCP server for the auth config created in step 2 and specify the tools that should be exposed.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">mcp</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;calendar-mcp-server&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">auth_config_ids</span><span class="o">=</span><span class="p">[</span><span class="n">auth_config_id</span><span class="p">],</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">allowed_tools</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GOOGLECALENDAR_FIND_EVENT&quot;</span><span class="p">]</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">)</span>
-</code></pre></div>
-<p>Create an MCP server URL that uses the connected account linked to <code>martin</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">mcp_url</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">mcp_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;transport=sse&quot;</span><span class="p">,</span> <span class="s2">&quot;user_id=martin&quot;</span><span class="p">)</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># i.e. https://mcp.composio.dev/composio/server/&lt;uuid&gt;?user_id=martin</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># &lt;uuid&gt; is a string of pattern 12345678-90ab-cdef-1234-567890abcdef</span>
-</code></pre></div>
-<p>Configure a <a href="https://ai.pydantic.dev/">Pydantic AI</a> agent with the <code>mcp_url</code> so that it can use Google Calendar on behalf of the user who granted access in step 4.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic_ai</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic_ai.mcp</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCPServerStreamableHTTP</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="s1">&#39;openai:o4-mini&#39;</span><span class="p">,</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">toolsets</span><span class="o">=</span><span class="p">[</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="n">MCPServerStreamableHTTP</span><span class="p">(</span><span class="n">mcp_url</span><span class="p">),</span>  
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="p">]</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">)</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="k">async</span> <span class="k">with</span> <span class="n">agent</span><span class="p">:</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        <span class="s2">&quot;List my Sep 2025 calendar events&quot;</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    <span class="p">)</span>
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
-</code></pre></div>
+<h2 id="the-session">The session</h2>
+<p>The recording started with <code>asciinema rec</code> before issuing <code>/ml-research:ml-research-task</code> with a prompt to fine-tune <code>Qwen/Qwen2-0.5B</code> on <code>trl-lib/Capybara</code> via HF Jobs. Claude ran for about 85 minutes, dispatched a researcher subagent, ran a local smoke test, submitted two HF Jobs (a 5-step smoke and a full epoch), and produced a recap table with the final recipe. The raw <code>.cast</code> is 5087s, 12,577 events, ~88 KB.</p>
+<h2 id="the-edit">The edit</h2>
+<p>The conversation, paraphrased:</p>
+<ol>
+<li><em>"give me an overview, remove the trailing <code>/quit</code>, then remove the notable dead-air spans"</em>. Claude ran <code>castedit.py analyze</code> for a few-hundred-token summary of idle gaps and typing runs, located the <code>/</code> keypress at t=5083.15s and applied a trailing cut, then applied <code>idle_cap=2.0</code> to clamp every gap longer than two seconds. The 5087s recording dropped to 1336s.</li>
+<li>
+<p><em>"create a 40-second cast that makes user input, intermediate responses, and the final response easy to follow, and speed up everything else. First give me an overview of what is relevant and what to speed up"</em>. Claude re-analyzed the 1336s cast, identified the readable segments (the typed prompt at t≈12s, the first tool calls at t≈16–50s, an auto-recap at t≈1115s, and the final summary table at t≈1199–1304s), and proposed an eight-region plan with explicit speedup factors per segment:</p>
+<table>
+<thead>
+<tr>
+<th>Window (s)</th>
+<th>Content</th>
+<th>Factor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–11.5</td>
+<td>terminal idle before prompt</td>
+<td>10x</td>
+</tr>
+<tr>
+<td>11.5–16.5</td>
+<td>user types the <code>/ml-research:ml-research-task</code> prompt</td>
+<td>1x</td>
+</tr>
+<tr>
+<td>16.5–50</td>
+<td>first reply, <code>Bash(uv --version &amp;&amp; hf auth whoami)</code>, "Preflight passes"</td>
+<td>5x</td>
+</tr>
+<tr>
+<td>50–1115</td>
+<td>subagent work, spinners, polling</td>
+<td>250x</td>
+</tr>
+<tr>
+<td>1115–1120</td>
+<td>first <code>※ recap</code> block</td>
+<td>1x</td>
+</tr>
+<tr>
+<td>1120–1199</td>
+<td>waiting for the full HF Jobs run</td>
+<td>50x</td>
+</tr>
+<tr>
+<td>1199–1304</td>
+<td>final "Done" response, stages table, recipe</td>
+<td>7x</td>
+</tr>
+<tr>
+<td>1304–1336</td>
+<td>trailing pings</td>
+<td>30x</td>
+</tr>
+</tbody>
+</table>
+<p>First render landed at 32s, eight seconds short of target. Claude reallocated the headroom to the two readable stretches with the most text on screen, dropping the early-intermediate factor from 5x to 3.5x and the final-response factor from 7x to 5x. Second render landed at 40.4s.
+3. <em>"render to gif"</em>. <code>agg</code> with <code>--renderer resvg</code> and a font fallback that pins <code>STIX Two Math</code> for the U+23F5 auto-mode arrows, which agg's default <code>swash</code> renderer otherwise displays as tofu.</p>
+</li>
+</ol>
+<h2 id="the-result">The result</h2>
+<p><img alt="40-second cast of the Claude Code ML fine-tuning session" src="../../../../agentic-screencast-editing/cast.gif" /></p>
+<p>The 8.2 MB GIF gives the typed prompt, the first tool calls, the auto-recap, and the final summary table a few seconds of legible screen time each. The 19-minute waiting stretch compresses to under five seconds.</p>
+<h2 id="what-made-it-work">What made it work</h2>
+<p>Two design choices in the <code>cast-edit</code> skill kept this practical.</p>
+<p><strong>The cast never enters the model's context.</strong> A real recording is megabytes of ANSI output. <code>castedit.py analyze</code> parses the file and returns a compact summary: idle gaps over threshold, detected typing runs with reconstructed text snippets, and an estimate of how much idle-capping would reclaim. The model reasons over a few hundred tokens, not the raw stream.</p>
+<p><strong>A small, explicit JSON plan covers the editing surface.</strong> The <code>edit</code> command takes three knobs: <code>idle_cap</code> clamps every gap to a maximum, <code>speed_regions</code> divides intervals in a time range by a factor, and <code>cuts</code> drops events in a range. Each knob is a direct manipulation of intervals, so the output stays lossless to rendering and no absolute timestamps need recomputing. The model emits the plan as JSON and the engine applies it.</p>
+<p>The accompanying <a href="https://gist.github.com/krasserm/d745bd99013da875258dd495bf967a2d#file-skill-md"><code>SKILL.md</code></a> is operator notes and guardrails: the rounding behavior that keeps total drift sub-millisecond, why <code>cuts</code> cannot shrink pure idle gaps, and the agg flags that avoid Claude Code's known glyph artifacts.</p>
+<p>The full editing loop, from "give me an overview" to validated GIF, was a handful of natural-language turns. Most of the guidance is in the skill description telling the model what knobs exist and how to combine them. The model supplies the judgment about which seconds matter to a viewer.</p>
 
 
 
