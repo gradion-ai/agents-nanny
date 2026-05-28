@@ -4,7 +4,7 @@ authors:
   - martin
 ---
 
-# Editing terminal screencasts in natural language
+# Agentic editing of terminal screencasts
 
 [asciinema](https://asciinema.org/) is naturally suited to agentic screencast editing. A `.cast` recording is plain text (JSON Lines), one event per line of the form `[interval, code, data]`, where `interval` is seconds since the previous event. Editing reduces to arithmetic on those intervals (and optionally to substitution on the payloads, e.g. for redaction), so a small tool can expose trimming, speeding, and cutting as cheap operations that a language model can reason about and combine.
 
