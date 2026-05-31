@@ -12,13 +12,13 @@
         <meta name="author" content="Martin Krasser">
       
       
-        <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/category/programmatic-tool-calling/">
+        <link rel="canonical" href="https://gradion-ai.github.io/agents-nanny/category/agentic-workflows/">
       
       
-        <link rel="prev" href="../group-assistance/">
+        <link rel="prev" href="../agent-authorization/">
       
       
-        <link rel="next" href="../../archive/2026/">
+        <link rel="next" href="../code-actions/">
       
       
         <link rel="alternate" type="application/rss+xml" title="RSS feed" href="../../feed_rss_created.xml">
@@ -29,7 +29,7 @@
     
     
       
-        <title>Programmatic tool calling - The Agents Nanny</title>
+        <title>Agentic workflows - The Agents Nanny</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#programmatic-tool-calling" class="md-skip">
+        <a href="#agentic-workflows" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Programmatic tool calling
+              Agentic workflows
             
           </span>
         </div>
@@ -442,12 +442,23 @@
                 
   
   
-  
     
   
   
-    <li class="md-nav__item">
-      <a href="../agentic-workflows/" class="md-nav__link">
+    
+      
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -458,6 +469,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -517,23 +529,12 @@
                 
   
   
-    
-  
   
     
-      
-    
   
   
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../programmatic-tool-calling/" class="md-nav__link">
         
   
   
@@ -544,7 +545,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -587,7 +587,7 @@
   <div class="md-content" data-md-component="content">
     <div class="md-content__inner">
       <header class="md-typeset">
-        <h1 id="programmatic-tool-calling">Programmatic tool calling</h1>
+        <h1 id="agentic-workflows">Agentic workflows</h1>
       </header>
       
         <article class="md-post md-post--excerpt">
@@ -604,19 +604,18 @@
     <div class="md-post__meta md-meta">
       <ul class="md-meta__list">
         <li class="md-meta__item">
-          <time datetime="2025-12-16 00:00:00+00:00">December 16, 2025</time></li>
+          <time datetime="2026-05-31 00:00:00+00:00">May 31, 2026</time></li>
         
           <li class="md-meta__item">
             in
             
-              <a href="../code-actions/" class="md-meta__link">Code actions</a>, 
-              <a href="./" class="md-meta__link">Programmatic tool calling</a></li>
+              <a href="./" class="md-meta__link">Agentic workflows</a></li>
         
         
           
           <li class="md-meta__item">
             
-              6 min read
+              4 min read
             
           </li>
         
@@ -625,13 +624,12 @@
     </div>
   </header>
   <div class="md-post__content md-typeset">
-    <h2 id="code-actions-as-tools-evolving-tool-libraries-for-agents"><a class="toclink" href="../../2025/12/16/code-actions-as-tools-evolving-tool-libraries-for-agents/">Code Actions as Tools: Evolving Tool Libraries for Agents</a></h2>
-<p>Programmatic tool calling is gaining traction in agent development. Instead of emitting one JSON tool call at a time, agents generate executable "code actions" that call tools in a sandboxed environment. This pattern is inspired by Apple's <a href="https://machinelearning.apple.com/research/codeact">CodeAct</a> and appears in many agentic systems. More <a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling">recent</a> <a href="https://blog.cloudflare.com/code-mode/">implementations</a> increasingly focus on programmatic calling of MCP tools.</p>
-<p>These solutions typically generate Python or TypeScript APIs for MCP tools, let an agent write code actions that call these APIs, execute the code in a sandboxed environment, and feed results back to the agent. This improves performance compared to JSON-based approaches, but it often misses an important point: a generated code action can itself become a tool, available for reuse in later code actions.</p>
+    <h2 id="building-an-autonomous-ml-researcher-with-claude-code-dynamic-workflows"><a class="toclink" href="../../2026/05/31/building-an-autonomous-ml-researcher-with-claude-code-dynamic-workflows/">Building an autonomous ML researcher with Claude Code dynamic workflows</a></h2>
+<p>As an experiment, I re-implemented the autonomous ML research-and-engineering workflow encoded in Hugging Face's <a href="https://github.com/huggingface/ml-intern"><code>ml-intern</code></a> as a Claude Code <a href="https://code.claude.com/docs/en/workflows">dynamic workflow</a> that delegates execution to the <a href="https://github.com/huggingface/skills">Hugging Face skills</a> (<code>hf-skills</code>) instead of <code>ml-intern</code>'s custom tools<sup id="fnref3:1"><a class="footnote-ref" href="../../2026/05/31/building-an-autonomous-ml-researcher-with-claude-code-dynamic-workflows/#fn:1">1</a></sup>. I did it in three steps: extract a technology-neutral specification of the workflow, compile that specification into a single generic workflow script, then run the script against a concrete task. The result is one workflow that accepts any ML research task as an argument, rather than having Claude Code write a new workflow script for each task.</p>
 
     
       <nav class="md-post__action">
-        <a href="../../2025/12/16/code-actions-as-tools-evolving-tool-libraries-for-agents/">
+        <a href="../../2026/05/31/building-an-autonomous-ml-researcher-with-claude-code-dynamic-workflows/">
           Continue reading
         </a>
       </nav>

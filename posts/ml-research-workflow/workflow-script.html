@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML Research Workflow — Script Internals</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --panel:#ffffff; --ink:#0f172a; --muted:#475569; --faint:#94a3b8;
+    --line:#e2e8f0; --accent:#6366f1; --accent-ink:#4338ca;
+    --plan:#64748b; --research:#6366f1; --validate:#0d9488; --build:#d97706;
+    --test:#db2777; --run:#9333ea; --complete:#16a34a;
+    --must:#dc2626; --should:#b45309; --may:#64748b;
+    --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased}
+  a{color:var(--accent-ink); text-decoration:none} a:hover{text-decoration:underline}
+
+  header.top{position:sticky; top:0; z-index:50; backdrop-filter:saturate(150%) blur(8px); background:rgba(255,255,255,.82); border-bottom:1px solid var(--line)}
+  .top-inner{max-width:1120px; margin:0 auto; padding:10px 22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+  .brand{font-weight:750; letter-spacing:-.01em; font-size:15.5px; white-space:nowrap}
+  .brand .dot{color:var(--run)}
+  nav.jump{display:flex; gap:4px; flex-wrap:wrap; margin-left:auto}
+  nav.jump a{font-size:12.5px; color:var(--muted); padding:5px 9px; border-radius:7px; white-space:nowrap}
+  nav.jump a:hover{background:#eef0f7; text-decoration:none; color:var(--ink)}
+  .siblings{display:flex; gap:6px; width:100%; padding:0 22px 8px; max-width:1120px; margin:0 auto; flex-wrap:wrap}
+  .siblings a{font-size:11.5px; padding:4px 10px; border-radius:999px; border:1px solid var(--line); color:var(--muted); background:#fff}
+  .siblings a.here{background:var(--run); color:#fff; border-color:var(--run)}
+
+  main{max-width:1120px; margin:0 auto; padding:26px 22px 120px}
+  section{margin:46px 0; scroll-margin-top:80px}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:8px}
+  .sec-head h2{font-size:22px; margin:0; letter-spacing:-.02em}
+  .sec-head .tag{font-size:12px; color:var(--faint); font-weight:600}
+  .sec-sub{color:var(--muted); margin:0 0 18px; max-width:80ch}
+
+  .hero{background:linear-gradient(135deg,#3b0764 0%,#581c87 50%,#6d28d9 100%); color:#f3e8ff; border-radius:18px; padding:34px 34px 30px; box-shadow:var(--shadow); position:relative; overflow:hidden}
+  .hero h1{margin:0 0 8px; font-size:29px; letter-spacing:-.025em; color:#fff}
+  .hero p{margin:0 0 6px; max-width:84ch; color:#e9d5ff}
+  .hero code{background:rgba(255,255,255,.16); color:#fff; padding:1px 6px; border-radius:5px}
+  .hero .glow{position:absolute; width:380px; height:380px; right:-90px; top:-120px; background:radial-gradient(circle,rgba(192,132,252,.5),transparent 70%); pointer-events:none}
+
+  .stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-top:18px}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow)}
+  .stat b{display:block; font-size:23px; letter-spacing:-.02em} .stat span{color:var(--muted); font-size:12.5px}
+
+  .grid{display:grid; gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow)}
+  .card h3{margin:0 0 6px; font-size:15px; letter-spacing:-.01em}
+  .card p{margin:0; color:var(--muted); font-size:13.5px}
+  .card .ic{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--run)}
+
+  .callout{background:#fffbeb; border:1px solid #fde68a; border-left:4px solid var(--build); border-radius:12px; padding:14px 18px; box-shadow:var(--shadow)}
+  .callout h3{margin:0 0 6px; font-size:14.5px; color:#92400e}
+  .callout p{margin:4px 0; color:#7c5b12; font-size:13.5px}
+
+  /* diagram */
+  .diagram-wrap{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:10px; box-shadow:var(--shadow)}
+  .diagram-hint{display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:8px 12px 4px; color:var(--muted); font-size:12.5px}
+  .legend-chip{display:inline-flex; align-items:center; gap:6px}
+  .legend-chip i{width:11px; height:11px; border-radius:3px; display:inline-block}
+  svg.flow{width:100%; height:auto; display:block}
+  .node{cursor:pointer}
+  .node .box{fill:color-mix(in srgb,var(--c) 9%,#fff); stroke:var(--c); stroke-width:1.6; transition:fill .15s ease}
+  .node:hover .box{fill:color-mix(in srgb,var(--c) 20%,#fff)}
+  .node:focus{outline:none} .node:focus .box{stroke-width:2.6}
+  .node .badge{fill:var(--c)}
+  .node .num{fill:#fff; font:700 14px/1 sans-serif; text-anchor:middle}
+  .node .title{fill:#0f172a; font:650 14px/1 sans-serif}
+  .node .sub{fill:#64748b; font:11.5px/1 sans-serif}
+  .ann{fill:#475569; font:11px/1 sans-serif}
+  .ann.fan{fill:var(--research)} .ann.crit{fill:var(--validate)} .ann.retry{fill:var(--build)}
+  .ann.cost{fill:#e11d48} .ann.stop{fill:#dc2626; font-weight:700} .ann.gate{fill:var(--test)}
+  .conn{stroke:#cbd5e1; stroke-width:2; fill:none}
+  .branch{stroke:#fca5a5; stroke-width:1.6; stroke-dasharray:5 4; fill:none}
+
+  details.acc{background:var(--panel); border:1px solid var(--line); border-radius:12px; margin:10px 0; box-shadow:var(--shadow); overflow:hidden}
+  details.acc>summary{list-style:none; cursor:pointer; padding:14px 18px; display:flex; align-items:center; gap:12px; font-weight:600}
+  details.acc>summary::-webkit-details-marker{display:none}
+  details.acc>summary .chev{margin-left:auto; color:var(--faint); transition:transform .2s ease}
+  details.acc[open]>summary .chev{transform:rotate(90deg)}
+  details.acc>summary:hover{background:#fafbff}
+  details.acc .body{padding:4px 18px 18px; border-top:1px solid var(--line)}
+  .pnum{display:inline-flex; align-items:center; justify-content:center; min-width:30px; height:30px; padding:0 8px; border-radius:8px; font-weight:700; font-size:13px; color:#fff}
+
+  ul.tight{margin:10px 0; padding-left:20px} ul.tight li{margin:5px 0}
+  .sublabel{font-weight:700; color:var(--ink)}
+  .note{background:#f8fafc; border:1px dashed var(--line); border-radius:10px; padding:10px 14px; margin:12px 0; font-size:13.5px; color:var(--muted)}
+  code{background:#eef0f7; padding:1.5px 6px; border-radius:6px; font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; color:#3730a3}
+  pre.code{background:#0f172a; color:#e2e8f0; border-radius:10px; padding:14px 16px; overflow-x:auto; font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace; margin:12px 0}
+  pre.code .c{color:#64748b} pre.code .k{color:#c4b5fd} pre.code .s{color:#86efac} pre.code .f{color:#7dd3fc}
+
+  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:12px}
+  .chip{font:600 11.5px/1 sans-serif; padding:5px 9px; border-radius:7px; border:1px solid var(--line); background:#f8fafc; color:var(--muted); cursor:pointer; transition:all .12s ease}
+  .chip:hover{text-decoration:none; border-color:var(--accent); color:var(--accent-ink); background:#eef0ff}
+  .chip.m{border-color:#ddd6fe; color:#6d28d9; background:#f5f3ff}
+  .chip.m:hover{background:#ede9fe}
+
+  .tbl-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow)}
+  table{border-collapse:collapse; width:100%; background:var(--panel); font-size:13px}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{background:#f8fafc; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted)}
+  tbody tr:hover{background:#fafbff}
+  td.id{font-weight:700; white-space:nowrap; color:var(--run)}
+  .pill{display:inline-block; font:700 10.5px/1 sans-serif; padding:3px 7px; border-radius:6px; white-space:nowrap}
+  .pill.guard{color:#1d4ed8; background:#eff6ff; border:1px solid #bfdbfe}
+  .pill.stop{color:#b91c1c; background:#fef2f2; border:1px solid #fecaca}
+
+  .kw{font-weight:700; padding:0 2px; border-radius:3px}
+  .kw-must{color:var(--must)} .kw-should{color:var(--should)} .kw-may{color:var(--may)}
+  .flash{animation:flash 1.6s ease}
+  @keyframes flash{0%{background:#fff7cd}30%{background:#fff7cd}100%{background:initial}}
+  .group-h{font-size:12.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:20px 0 8px}
+  footer{max-width:1120px; margin:0 auto; padding:30px 22px 60px; color:var(--faint); font-size:12.5px; border-top:1px solid var(--line)}
+  .totop{position:fixed; right:18px; bottom:18px; background:var(--run); color:#fff; border:none; width:42px; height:42px; border-radius:12px; font-size:18px; cursor:pointer; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s}
+  .totop.show{opacity:1; pointer-events:auto}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="gradion-theme">
+  /* ===== Gradion AI dark theme (matches gradion-ai.github.io/agents-nanny) ===== */
+  :root{
+    --bg:#0a0a0f; --panel:#15151f; --panel-2:#1f1f2b;
+    --ink:#f5f8fc; --body:#aab6c6; --muted:#94a3b8; --faint:#647489;
+    --line:rgba(148,163,184,.10); --line-strong:rgba(148,163,184,.18);
+    --accent:#38bdf8; --accent-ink:#7dd3fc; --violet:#a78bfa; --purple:#8b5cf6;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px rgba(0,0,0,.40);
+    --plan:#8a99ad; --research:#818cf8; --validate:#2dd4bf; --build:#fbbf24;
+    --monitor:#c084fc; --complete:#4ade80; --test:#f472b6; --run:#c084fc;
+    --must:#fb7185; --should:#fbbf24; --may:#94a3b8;
+    --layerA:#38bdf8; --layerB:#fb7185; --layerC:#a78bfa;
+  }
+  body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:var(--body); background:var(--bg)}
+  code,pre.code,pre.code *{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+  h1,h2,h3,.sec-head h2,.card h3,.layer h3,.callout h3,.stat b,.rule .rid,.sublabel,details.acc>summary{color:var(--ink)}
+  :focus-visible{outline:2px solid var(--accent-ink); outline-offset:2px}
+
+  header.top{background:rgba(10,10,15,.86); border-bottom:1px solid var(--line)}
+  .brand{color:var(--ink)}
+  nav.jump a{color:var(--muted)} nav.jump a:hover{background:var(--panel-2); color:var(--ink)}
+  .siblings a{background:var(--panel); border-color:var(--line-strong); color:var(--muted)}
+  .siblings a.here{background:var(--accent); color:#06121b; border-color:var(--accent)}
+
+  .hero{border:1px solid var(--line-strong); background:
+    radial-gradient(120% 140% at 100% 0%, rgba(56,189,248,.15), transparent 55%),
+    radial-gradient(120% 140% at 0% 100%, rgba(167,139,250,.16), transparent 55%),
+    linear-gradient(135deg,#0e1018 0%,#13151f 55%,#161827 100%)}
+  .hero h1{color:#fff} .hero p{color:#cdd6e3}
+  .hero code{background:rgba(255,255,255,.10); color:#e2e8f0}
+  .hero .glow{background:radial-gradient(circle,rgba(56,189,248,.32),transparent 70%)}
+  .hero .kw-legend span{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12)}
+
+  .card,.stat,.diagram-wrap,details.acc,.tbl-scroll,.layer,.rule{background:var(--panel); border-color:var(--line)}
+  .card p,.sec-sub,.stat span,.card .ic,.layer .sub,.diagram-hint{color:var(--muted)}
+  details.acc>summary:hover{background:var(--panel-2)} details.acc .body{border-top-color:var(--line)}
+  .note{background:var(--panel-2); border-color:var(--line-strong); color:var(--muted)}
+  .group-h{color:var(--muted)} .rule{border-left-color:var(--line-strong)}
+  .pcard{border-left-color:var(--accent)}
+
+  code{background:var(--panel-2); border:1px solid var(--line-strong); color:#cdd6e1}
+  pre.code{background:#0c0e15; border:1px solid var(--line); color:#c9d1d9}
+  pre.code .c{color:#5b6b78} pre.code .k{color:#b394d6} pre.code .s{color:#3ec6b6} pre.code .f{color:#4aa3e0}
+
+  th{background:rgba(56,189,248,.08); color:var(--muted); border-bottom-color:var(--line)}
+  td{border-bottom-color:var(--line)} tbody tr:hover{background:var(--panel-2)} td.id{color:var(--accent-ink)}
+
+  .chip{background:var(--panel-2); border-color:var(--line-strong); color:var(--muted)}
+  .chip:hover{border-color:var(--accent); color:var(--accent-ink); background:rgba(56,189,248,.10)}
+  .chip.c{border-color:rgba(56,189,248,.4); color:#7dd3fc; background:rgba(56,189,248,.08)} .chip.c:hover{background:rgba(56,189,248,.16)}
+  .chip.r{border-color:rgba(251,113,133,.4); color:#fda4af; background:rgba(251,113,133,.08)} .chip.r:hover{background:rgba(251,113,133,.16)}
+  .chip.m{border-color:rgba(167,139,250,.4); color:#c4b5fd; background:rgba(167,139,250,.10)} .chip.m:hover{background:rgba(167,139,250,.18)}
+
+  .badge-gate{color:var(--build); background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.5)}
+  .gapflag{color:var(--build); background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.5)}
+  .omitflag{color:#fda4af; background:rgba(251,113,133,.10); border-color:rgba(251,113,133,.45)}
+  .pill.guard{color:#7dd3fc; background:rgba(56,189,248,.10); border-color:rgba(56,189,248,.4)}
+  .pill.stop{color:#fda4af; background:rgba(251,113,133,.10); border-color:rgba(251,113,133,.45)}
+
+  .callout{background:var(--panel); border-color:var(--line-strong)} .callout h3{color:var(--ink)} .callout p,.callout li{color:var(--muted)}
+  .callout.keep{border-left-color:var(--complete); background:rgba(74,222,128,.07)} .callout.keep h3{color:#86efac}
+  .callout.adapt{border-left-color:var(--build); background:rgba(251,191,36,.07)} .callout.adapt h3{color:#fcd34d}
+  .callout.omit{border-left-color:#fb7185; background:rgba(251,113,133,.07)} .callout.omit h3{color:#fda4af}
+  .lt.A,.lp.A{background:var(--layerA); color:#06121b} .lt.B,.lp.B{background:var(--layerB); color:#2a0610} .lt.C,.lp.C{background:var(--layerC); color:#140a26}
+
+  .diagram-wrap{background:var(--panel)}
+  .node .box{fill:color-mix(in srgb,var(--c) 18%,var(--panel)); stroke:var(--c)}
+  .node:hover .box{fill:color-mix(in srgb,var(--c) 30%,var(--panel))}
+  .node .title,.node .t{fill:var(--ink)} .node .sub,.node .s{fill:var(--muted)}
+  .node:focus .box,.node:focus .b{stroke-width:2.6}
+  .conn{stroke:rgba(148,163,184,.42)}
+  .gatepill{fill:color-mix(in srgb,var(--c) 24%,var(--panel)); stroke:var(--c)}
+  .specbox .b{fill:color-mix(in srgb,var(--c) 16%,var(--panel)); stroke:var(--c)}
+  .scrbox .b{fill:var(--panel-2); stroke:var(--c)}
+  .node.omit .b{fill:#191a24; stroke:#3a4150} .node.omit .t{fill:var(--faint)}
+  .colhead{fill:var(--muted)}
+  .ann{fill:var(--muted)} .ann.stop{fill:#fb7185} .ann.cost{fill:#fb7185}
+  .tagmark.add{fill:#5eead4} .tagmark.adapt{fill:#fcd34d} .tagmark.omit{fill:#fda4af}
+
+  .kw-must{color:#fb7185} .kw-should{color:#fbbf24} .kw-may{color:#94a3b8}
+  @keyframes flash{0%{background:rgba(56,189,248,.20)}30%{background:rgba(56,189,248,.20)}100%{background:transparent}}
+  footer{border-top-color:var(--line); color:var(--faint)} footer code{background:var(--panel-2)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">ML Research Workflow <span class="dot">●</span> Script Internals</div>
+    <nav class="jump">
+      <a href="#overview">Overview</a>
+      <a href="#model">Orchestration</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#mechanisms">Mechanisms</a>
+      <a href="#stops">Stop conditions</a>
+      <a href="#config">Config</a>
+    </nav>
+  </div>
+  <div class="siblings">
+    <a href="workflow-spec.html">① Spec explorer</a>
+    <a href="workflow-script.html" class="here">② Script internals</a>
+    <a href="spec-to-script-map.html">③ Spec → script map</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <div class="hero">
+      <div class="glow"></div>
+      <h1>Inside <code>ml-research.js</code></h1>
+      <p class="kw-scan">An executable encoding of the behavioral spec as a <b>deterministic Workflow orchestration</b>.
+      The script owns the <i>control flow, the gates, and the discipline</i>; the actual ML work is delegated to
+      subagents that drive the <b>Hugging Face skills</b> (<code>huggingface-skills:*</code>). It is the same workflow
+      the spec describes — research-first, validate-before-spend, smoke-before-scale, persist-and-verify — rendered as
+      JavaScript that fans out subagents, forces structured output, and enforces the hard rules in code.</p>
+      <p class="kw-scan">It runs on a <b>Workflow harness</b> that shares the local <b>filesystem</b> across subagents
+      but <b>not their context</b>. Scripts pass between local subagents via <code>WORK_DIR</code>; the remote HF Job
+      receives code <b>by value</b> (inline source), never a local path.</p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><b>13</b><span>orchestrated phases</span></div>
+      <div class="stat"><b>13</b><span>forced-output JSON schemas</span></div>
+      <div class="stat"><b>4</b><span>adversarial critics</span></div>
+      <div class="stat"><b>2</b><span>pure code guards</span></div>
+      <div class="stat"><b>$10</b><span>default autonomous cost cap</span></div>
+    </div>
+
+    <div class="grid g2" style="margin-top:18px">
+      <div class="callout">
+        <h3>Scoping decision 1 — autonomous paid submit, up to a cap</h3>
+        <p class="kw-scan">Paid HF Jobs auto-submit <b>autonomously up to a dollar cost cap</b> (spec §7.7's autonomous
+        mode). <code>canSpend()</code> gates every billable submit; <code>spentUSD</code> accrues across the run.
+        Scheduled/recurring jobs are <b>out of scope</b> (always human-gated).</p>
+      </div>
+      <div class="callout">
+        <h3>Scoping decision 2 — stop at the first verified result</h3>
+        <p class="kw-scan">The workflow <b>stops at the first verified result</b>. The spec §5.9 autonomous
+        improvement loop and the grid sweep are <b>omitted</b>. The alert-driven corrective retries that get one good
+        run to <i>complete</i> (divergence → lr×0.1, the OOM ladder, etc.) <b>are kept</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ORCHESTRATION MODEL -->
+  <section id="model">
+    <div class="sec-head"><h2>The orchestration model</h2><span class="tag">five ideas that shape every phase</span></div>
+    <p class="sec-sub">Before the phases, five structural choices explain how the script turns a prose spec into
+    enforceable control flow.</p>
+    <div class="grid g3 kw-scan">
+      <div class="card"><span class="ic">Subagents</span><h3>Isolated context per step</h3>
+        <p>Each <code>agent()</code> call runs in its own context; the orchestrator only sees the returned object. This
+        is exactly the spec's research-subagent isolation, generalized to every phase.</p></div>
+      <div class="card"><span class="ic">Structured output</span><h3>Forced JSON schemas</h3>
+        <p>Every subagent returns a schema-validated object (<code>PLAN_SCHEMA</code>, <code>RESEARCH_SCHEMA</code>,
+        <code>JOB_SCHEMA</code>, …). The orchestrator branches on fields, never on free prose.</p></div>
+      <div class="card"><span class="ic">Pure guards</span><h3>Code, not self-report</h3>
+        <p><code>isScopeChange()</code> and <code>assertSubmitInvariant()</code> run in plain JS, independent of what a
+        subagent claims. The model cannot talk its way past them.</p></div>
+      <div class="card"><span class="ic">Critics</span><h3>Adversarial verification</h3>
+        <p>Four read-only <code>Explore</code> critics re-check research, data format, code, and final conformance —
+        tool-backed, with a <code>mustReblock</code> flag that can halt the line.</p></div>
+      <div class="card"><span class="ic">Profiles</span><h3>Declarative genericity</h3>
+        <p><code>TASK_PROFILES</code> maps task type → skill, reference script, schema rules. One pipeline serves LLM,
+        vision, embedding, eval-only, and data-only tasks with no branch explosion.</p></div>
+      <div class="card"><span class="ic">Budgets</span><h3>Tokens vs. dollars</h3>
+        <p>The harness <code>budget.*</code> tracks <b>tokens</b>; HF compute spend is tracked separately in
+        <code>spentUSD</code> against <code>COST_CAP_USD</code>.</p></div>
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section id="pipeline">
+    <div class="sec-head"><h2>The 13-phase pipeline</h2><span class="tag">meta.phases · top-to-bottom</span></div>
+    <p class="sec-sub"><b>Click any phase</b> to open its detail. Annotations on the right flag fan-out, critics, retry
+    loops, cost gates, and the points where the workflow can <b>STOP and surface to the user</b>. Two free early-exits
+    (eval-only, data-only) branch out after the data audit.</p>
+
+    <div class="diagram-wrap">
+      <div class="diagram-hint">
+        <span class="legend-chip"><i style="background:var(--plan)"></i>Plan</span>
+        <span class="legend-chip"><i style="background:var(--research)"></i>Research</span>
+        <span class="legend-chip"><i style="background:var(--validate)"></i>Validate</span>
+        <span class="legend-chip"><i style="background:var(--build)"></i>Implement</span>
+        <span class="legend-chip"><i style="background:var(--test)"></i>Test / gate</span>
+        <span class="legend-chip"><i style="background:var(--run)"></i>Run</span>
+        <span class="legend-chip"><i style="background:var(--complete)"></i>Verify</span>
+      </div>
+
+      <svg class="flow" viewBox="0 0 1000 1470" role="img" aria-label="ml-research.js phase pipeline">
+        <defs>
+          <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"></path>
+          </marker>
+          <marker id="arrR" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#fca5a5"></path>
+          </marker>
+        </defs>
+
+        <!-- connectors -->
+        <path class="conn" marker-end="url(#arr)" d="M500,88  L500,130"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,198 L500,240"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,308 L500,350"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,418 L500,460"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,528 L500,570"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,638 L500,680"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,748 L500,790"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,858 L500,900"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,968 L500,1010"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,1078 L500,1120"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,1188 L500,1230"></path>
+        <path class="conn" marker-end="url(#arr)" d="M500,1298 L500,1340"></path>
+
+        <!-- early-exit branches from Data Audit (P4, y~394) curving to Evaluate (P11) -->
+        <path class="branch" marker-end="url(#arrR)" d="M280,410 C90,430 70,900 70,1262 C70,1290 160,1268 278,1262"></path>
+        <text class="ann stop" transform="rotate(-90 52 840)" x="52" y="840" text-anchor="middle">eval-only / data-only early-exit → Evaluate</text>
+
+        <!-- PHASE 0 -->
+        <g class="node" style="--c:var(--plan)" tabindex="0" role="button" data-target="p-0">
+          <rect class="box" x="280" y="24" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="56" r="17"></circle><text class="num" x="314" y="56" dy=".35em">0</text>
+          <text class="title" x="346" y="50">Intake &amp; Plan</text>
+          <text class="sub" x="346" y="70">classify · freeze baseline · build plan</text>
+        </g>
+        <text class="ann" x="735" y="52">trivial? → direct answer</text>
+        <text class="ann" x="735" y="68">PLAN_SCHEMA · resolveProfile()</text>
+
+        <!-- PHASE 1 -->
+        <g class="node" style="--c:var(--research)" tabindex="0" role="button" data-target="p-1">
+          <rect class="box" x="280" y="134" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="166" r="17"></circle><text class="num" x="314" y="166" dy=".35em">1</text>
+          <text class="title" x="346" y="160">Research</text>
+          <text class="sub" x="346" y="180">papers · citations · examples · datasets</text>
+        </g>
+        <text class="ann fan" x="735" y="162">⇉ parallel: 4 finders</text>
+        <text class="ann fan" x="735" y="178">→ synthesis (RESEARCH)</text>
+
+        <!-- PHASE 2 -->
+        <g class="node" style="--c:var(--research)" tabindex="0" role="button" data-target="p-2">
+          <rect class="box" x="280" y="244" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="276" r="17"></circle><text class="num" x="314" y="276" dy=".35em">2</text>
+          <text class="title" x="346" y="270">Verify Research</text>
+          <text class="sub" x="346" y="290">do the cited papers / datasets / APIs exist?</text>
+        </g>
+        <text class="ann crit" x="735" y="272">critic · mustReblock</text>
+        <text class="ann crit" x="735" y="288">→ one re-research pass</text>
+
+        <!-- PHASE 3 -->
+        <g class="node" style="--c:var(--validate)" tabindex="0" role="button" data-target="p-3">
+          <rect class="box" x="280" y="354" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="386" r="17"></circle><text class="num" x="314" y="386" dy=".35em">3</text>
+          <text class="title" x="346" y="380">Resources</text>
+          <text class="sub" x="346" y="400">verify model + dataset · size hardware</text>
+        </g>
+        <text class="ann fan" x="735" y="380">⇉ model + dataset</text>
+        <text class="ann stop" x="735" y="396">⏹ R8 STOP if missing</text>
+
+        <!-- PHASE 4 -->
+        <g class="node" style="--c:var(--validate)" tabindex="0" role="button" data-target="p-4">
+          <rect class="box" x="280" y="464" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="496" r="17"></circle><text class="num" x="314" y="496" dy=".35em">4</text>
+          <text class="title" x="346" y="490">Data Audit</text>
+          <text class="sub" x="346" y="510">schema/stats · format ↔ method critic</text>
+        </g>
+        <text class="ann crit" x="735" y="490">format critic</text>
+        <text class="ann stop" x="735" y="506">⏹ STOP if incompatible</text>
+
+        <!-- PHASE 5 -->
+        <g class="node" style="--c:var(--build)" tabindex="0" role="button" data-target="p-5">
+          <rect class="box" x="280" y="574" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="606" r="17"></circle><text class="num" x="314" y="606" dy=".35em">5</text>
+          <text class="title" x="346" y="600">Implement</text>
+          <text class="sub" x="346" y="620">adapt reference script → train.py + eval.py</text>
+        </g>
+        <text class="ann" x="735" y="600">IMPL_SCHEMA · by-value</text>
+        <text class="ann" x="735" y="616">monitoring/persist/timeout</text>
+
+        <!-- PHASE 6 -->
+        <g class="node" style="--c:var(--build)" tabindex="0" role="button" data-target="p-6">
+          <rect class="box" x="280" y="684" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="716" r="17"></circle><text class="num" x="314" y="716" dy=".35em">6</text>
+          <text class="title" x="346" y="710">Code Review</text>
+          <text class="sub" x="346" y="730">hallucinated imports · local-path leak · OOM-ready</text>
+        </g>
+        <text class="ann crit" x="735" y="716">critic → code-fix</text>
+
+        <!-- PHASE 7 -->
+        <g class="node" style="--c:var(--test)" tabindex="0" role="button" data-target="p-7">
+          <rect class="box" x="280" y="794" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="826" r="17"></circle><text class="num" x="314" y="826" dy=".35em">7</text>
+          <text class="title" x="346" y="820">CPU Smoke</text>
+          <text class="sub" x="346" y="840">1 train + 1 eval step · free / local</text>
+        </g>
+        <text class="ann retry" x="735" y="820">↻ analyze→fix ≤3</text>
+        <text class="ann stop" x="735" y="836">⏹ STOP on scope-change</text>
+
+        <!-- PHASE 8 -->
+        <g class="node" style="--c:var(--test)" tabindex="0" role="button" data-target="p-8">
+          <rect class="box" x="280" y="904" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="936" r="17"></circle><text class="num" x="314" y="936" dy=".35em">8</text>
+          <text class="title" x="346" y="930">GPU Preflight</text>
+          <text class="sub" x="346" y="950">tiny billable job · real model load · CUDA paths</text>
+        </g>
+        <text class="ann cost" x="735" y="930">💲 cost gate · billable</text>
+        <text class="ann retry" x="735" y="946">↻ ≤3 · submit-invariant</text>
+
+        <!-- PHASE 9 -->
+        <g class="node" style="--c:var(--test)" tabindex="0" role="button" data-target="p-9">
+          <rect class="box" x="280" y="1014" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="1046" r="17"></circle><text class="num" x="314" y="1046" dy=".35em">9</text>
+          <text class="title" x="346" y="1040">Job Readiness</text>
+          <text class="sub" x="346" y="1060">one-time pre-flight checklist gate</text>
+        </g>
+        <text class="ann gate" x="735" y="1040">🔒 checklist gate</text>
+        <text class="ann stop" x="735" y="1056">⏹ STOP if unsatisfied</text>
+
+        <!-- PHASE 10 -->
+        <g class="node" style="--c:var(--run)" tabindex="0" role="button" data-target="p-10">
+          <rect class="box" x="280" y="1124" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="1156" r="17"></circle><text class="num" x="314" y="1156" dy=".35em">10</text>
+          <text class="title" x="346" y="1150">Full Job</text>
+          <text class="sub" x="346" y="1170">one-job-first · confirm healthy · monitor alerts</text>
+        </g>
+        <text class="ann cost" x="735" y="1150">💲 cost gate</text>
+        <text class="ann retry" x="735" y="1166">↻ ≤3 alert-driven</text>
+
+        <!-- PHASE 11 -->
+        <g class="node" style="--c:var(--complete)" tabindex="0" role="button" data-target="p-11">
+          <rect class="box" x="280" y="1234" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="1266" r="17"></circle><text class="num" x="314" y="1266" dy=".35em">11</text>
+          <text class="title" x="346" y="1260">Evaluate &amp; Persist</text>
+          <text class="sub" x="346" y="1280">confirm it works · persisted · dashboard URL</text>
+        </g>
+        <text class="ann" x="735" y="1266">EVAL_SCHEMA</text>
+
+        <!-- FINAL -->
+        <g class="node" style="--c:var(--complete)" tabindex="0" role="button" data-target="p-12">
+          <rect class="box" x="280" y="1344" width="440" height="64" rx="13"></rect>
+          <circle class="badge" cx="314" cy="1376" r="17"></circle><text class="num" x="314" y="1376" dy=".3em" style="font-size:11px">✓</text>
+          <text class="title" x="346" y="1370">Final Verification</text>
+          <text class="sub" x="346" y="1390">tool-backed conformance vs. spec §9</text>
+        </g>
+        <text class="ann crit" x="735" y="1376">COMPLETION_SCHEMA</text>
+      </svg>
+    </div>
+
+    <!-- phase detail accordions -->
+    <div class="kw-scan" style="margin-top:18px">
+      <details class="acc" id="p-0"><summary><span class="pnum" style="background:var(--plan)">0</span> Intake &amp; Plan<span class="chev">›</span></summary><div class="body">
+        <p>One <code>agent()</code> call returns a <code>PLAN_SCHEMA</code> object: it classifies the task, picks
+        <code>taskType</code> (llm | vision | embedding | eval | data | other) and <code>method</code>, and
+        <b>freezes the baseline</b> <code>{model, dataset, method, sequenceLength}</code> exactly as the user expressed
+        it — the frozen object the scope-change guard later compares against.</p>
+        <ul class="tight">
+          <li><code>isTrivial=true</code> only for a pure factual question / status check / resource lookup → return
+          <code>directAnswer</code> and skip everything (spec's trivial-request branch).</li>
+          <li><code>resolveProfile(taskType)</code> selects the skill, reference scripts, and schema rules.</li>
+        </ul>
+        <div class="chips"><a class="chip m" href="#mech-schemas">PLAN_SCHEMA</a><a class="chip m" href="#mech-profiles">TASK_PROFILES</a></div>
+      </div></details>
+
+      <details class="acc" id="p-1"><summary><span class="pnum" style="background:var(--research)">1</span> Research — parallel fan-out<span class="chev">›</span></summary><div class="body">
+        <p>A <code>parallel([...])</code> of <b>four read-only <code>Explore</code> finders</b>, each in its own context,
+        each returning a <code>FINDER_SCHEMA</code> object:</p>
+        <ul class="tight">
+          <li><b>landmark</b> — anchor papers, read methodology (not abstracts).</li>
+          <li><b>citations</b> — downstream work; no full citation-graph API, so it uses paper-page links + host
+          <code>WebSearch/WebFetch</code> and sets <code>fidelity="reduced"</code>.</li>
+          <li><b>examples</b> — working code with current APIs, preferring the skill's shipped reference scripts.</li>
+          <li><b>datasets</b> — which datasets produced the reported results; confirm they load.</li>
+        </ul>
+        <p>A synthesis agent folds the finders into one <code>RESEARCH_SCHEMA</code>: a ranked recipe table, code
+        patterns (correct imports + current trainer args), SOTA landscape, references, and
+        <code>citationGraphFidelity</code>.</p>
+        <div class="chips"><a class="chip m" href="#model">subagent isolation</a><a class="chip m" href="#mech-schemas">FINDER / RESEARCH schemas</a></div>
+      </div></details>
+
+      <details class="acc" id="p-2"><summary><span class="pnum" style="background:var(--research)">2</span> Verify Research — adversarial critic<span class="chev">›</span></summary><div class="body">
+        <p>A read-only <code>Explore</code> critic returns a <code>CRITIC_SCHEMA</code> object. It tool-checks that the
+        cited papers, datasets, and models <b>actually exist</b> and that code patterns use <b>real current APIs</b>.
+        <code>mustReblock=true</code> only for hard problems (a cited resource doesn't exist, a hallucinated import);
+        "is every result truly attributable?" is a soft <code>warn</code>. If blocked, one corrective re-research pass
+        runs.</p>
+        <div class="chips"><a class="chip m" href="#mech-critics">the four critics</a></div>
+      </div></details>
+
+      <details class="acc" id="p-3"><summary><span class="pnum" style="background:var(--validate)">3</span> Resources — verify &amp; size<span class="chev">›</span></summary><div class="body">
+        <p>A <code>parallel([model, dataset])</code> of <code>Explore</code> agents (<code>RESOURCE_SCHEMA</code>). If
+        the user named a model/dataset, it confirms existence and inspects; if not, it evaluates candidates and
+        recommends. It also recommends a hardware flavor sized to the model footprint (R6).</p>
+        <div class="note">If a requested resource is missing/unusable (<code>needsUserDecision</code>, or
+        <code>!exists</code>) the workflow <b>STOPs</b> with <code>resource_unavailable</code> — it asks the user
+        rather than substituting (R8).</div>
+      </div></details>
+
+      <details class="acc" id="p-4"><summary><span class="pnum" style="background:var(--validate)">4</span> Data Audit — format ↔ method<span class="chev">›</span></summary><div class="body">
+        <p>An audit agent (<code>DATA_AUDIT_SCHEMA</code>) inspects schema/columns, splits, distributions, and sample
+        rows, then <b>validates the format against the method</b> using the profile's <code>schemaRules</code>
+        (e.g. DPO needs <code>prompt/chosen/rejected</code>). A format critic confirms compatibility; if it can be fixed
+        by column remapping it passes with a mapping, otherwise <code>mustReblock</code> → <b>STOP</b>
+        (<code>dataset_format_incompatible</code>, an R8 ask-the-user stop).</p>
+        <div class="note"><b>Early exits here:</b> <code>profile.evalOnly</code> → evaluate then finalize;
+        <code>profile.dataOnly</code> → build/persist a dataset then finalize. Both skip train/smoke/preflight/full-job.</div>
+      </div></details>
+
+      <details class="acc" id="p-5"><summary><span class="pnum" style="background:var(--build)">5</span> Implement — adapt the reference script<span class="chev">›</span></summary><div class="body">
+        <p>The implementer adapts the profile's shipped reference script (e.g. <code>train_sft_example.py</code>) and
+        writes <code>train.py</code> + <code>eval.py</code> into <code>WORK_DIR</code>, returning an
+        <code>IMPL_SCHEMA</code> whose <code>trainScriptContent</code> is the <b>full inline source</b> (by-value
+        transport). The script must wire trackio metrics + structured alerts, a concrete <code>push_to_hub</code>
+        destination, a sized timeout, the chosen flavor, OOM knobs (batch/accum/grad-checkpoint), and
+        <b>SMOKE knobs</b> (<code>SMOKE=1</code> → 1 step, tiny slice, CPU+fp32, optional tiny proxy model).</p>
+        <div class="chips"><a class="chip m" href="#mech-schemas">IMPL_SCHEMA</a><a class="chip m" href="#mech-rules">HARD_RULES preamble</a></div>
+      </div></details>
+
+      <details class="acc" id="p-6"><summary><span class="pnum" style="background:var(--build)">6</span> Code Review — critic before any run<span class="chev">›</span></summary><div class="body">
+        <p>An <code>Explore</code> critic reads the files and flags hallucinated imports, wrong trainer args, local-path
+        leakage, missing monitoring, a <code>username/...</code> placeholder destination, short timeout, OOM-readiness,
+        and source-build smells (R12). Any error-severity issue sets <code>mustReblock</code> and a code-fix pass edits
+        the files before anything executes.</p>
+      </div></details>
+
+      <details class="acc" id="p-7"><summary><span class="pnum" style="background:var(--test)">7</span> CPU Smoke — free, local<span class="chev">›</span></summary><div class="body">
+        <p>Runs <code>attemptWithRetry</code> (≤3): execute <code>train.py</code> with <code>SMOKE=1</code> on CPU+fp32
+        for one train step + one eval step (<code>uv run</code> resolves PEP-723 deps). A high loss is <b>not</b> a
+        failure; an exception/import/arg/schema error is. If the real model can't load on CPU, a tiny proxy model is
+        used (the real load is first exercised on GPU preflight). Each failure → analyze → minimal-fix → retry.</p>
+        <div class="note">This phase is the script's free realization of "test small before you spend big": it catches
+        import/dep/arg/schema/wiring bugs <b>before any paid GPU job</b>.</div>
+        <div class="chips"><a class="chip m" href="#mech-retry">attemptWithRetry</a><a class="chip m" href="#mech-taxonomy">FAILURE_TAXONOMY</a><a class="chip m" href="#mech-guards">scope-change guard</a></div>
+      </div></details>
+
+      <details class="acc" id="p-8"><summary><span class="pnum" style="background:var(--test)">8</span> GPU Preflight — tiny billable job<span class="chev">›</span></summary><div class="body">
+        <p>Gated by <code>canSpend(estimatedPreflightUSD)</code> and <code>assertSubmitInvariant()</code> before
+        submitting. Then <code>attemptWithRetry</code> (≤<code>MAX_JOB_RETRIES</code>) submits a tiny GPU job by value
+        on a small flavor, polls logs to a terminal state, and validates the <b>GPU-only code paths CPU could not</b>:
+        CUDA, mixed precision, the real model load, small-scale OOM. <code>recordSpend()</code> accrues the cost.</p>
+        <div class="chips"><a class="chip m" href="#mech-cost">cost-cap gate</a><a class="chip m" href="#mech-guards">submit invariant</a><a class="chip m" href="#mech-retry">retry loop</a></div>
+      </div></details>
+
+      <details class="acc" id="p-9"><summary><span class="pnum" style="background:var(--test)">9</span> Job Readiness — the one-time gate<span class="chev">›</span></summary><div class="body">
+        <p>A single <code>CHECKLIST_SCHEMA</code> agent verifies the spec §5.6 pre-flight checklist:
+        reference impl cited, dataset format verified, GPU smoke ok <i>and the real model loaded on GPU</i>, concrete
+        persistence destination, sized timeout, monitoring wired, by-value transport. If
+        <code>!allSatisfied</code> → <b>STOP</b> (<code>preflight_checklist_unsatisfied</code>).</p>
+      </div></details>
+
+      <details class="acc" id="p-10"><summary><span class="pnum" style="background:var(--run)">10</span> Full Job — one-job-first<span class="chev">›</span></summary><div class="body">
+        <p>Cost-gated and invariant-checked again, then <code>attemptWithRetry</code> (≤<code>MAX_JOB_RETRIES</code>)
+        submits <b>one</b> full job by value, polls logs to <b>confirm healthy</b> (a step advancing / first metric),
+        then monitors trackio alerts (<code>trackio list alerts --json --since &lt;cursor&gt;</code>). An ERROR-level
+        alert (divergence/NaN/OOM) is treated as a failure to analyze and correct — the alert-driven retry the spec's
+        §5.7 calls for. The dashboard URL is recorded as an artifact.</p>
+        <div class="chips"><a class="chip m" href="#mech-cost">cost-cap gate</a><a class="chip m" href="#mech-retry">alert-driven retry</a></div>
+      </div></details>
+
+      <details class="acc" id="p-11"><summary><span class="pnum" style="background:var(--complete)">11</span> Evaluate &amp; Persist<span class="chev">›</span></summary><div class="body">
+        <p>An <code>EVAL_SCHEMA</code> agent evaluates the trained model and <b>confirms it actually works</b> (not
+        merely produced), verifies it is persisted on the Hub, and reports the metric+value, eval URL, model URL, and
+        dashboard URL. (For eval-only / data-only tasks, this is reached directly from the early exit.)</p>
+      </div></details>
+
+      <details class="acc" id="p-12"><summary><span class="pnum" style="background:var(--complete)">✓</span> Final Verification<span class="chev">›</span></summary><div class="body">
+        <p><code>finalize()</code> runs a read-only, <b>tool-backed</b> <code>Explore</code> agent
+        (<code>COMPLETION_SCHEMA</code>) that re-checks the spec §9 completion criteria — verify, do not trust prior
+        claims: research preceded implementation, resources verified, smoke-tested, checklist satisfied, alerts emitted,
+        result persisted &amp; evaluated, <b>no scope change vs. the frozen baseline</b>, every artifact a direct URL.
+        Sets <code>result.conforms</code>.</p>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- MECHANISMS -->
+  <section id="mechanisms">
+    <div class="sec-head"><h2>Key mechanisms</h2><span class="tag">the reusable machinery behind the phases</span></div>
+    <p class="sec-sub">The phases above are thin; most of the discipline lives in a handful of reusable pieces.</p>
+    <div class="kw-scan">
+
+      <details class="acc" id="mech-guards"><summary>Pure code guards — enforced in JS, not by the model<span class="chev">›</span></summary><div class="body">
+        <p><b>Scope-change guard (R3/R4/R7).</b> A pure function checks whether a proposed fix touches a protected key.
+        Even if a subagent doesn't flag <code>scopeChange</code>, this catches it:</p>
+        <pre class="code"><span class="k">const</span> PROTECTED_KEYS = [<span class="s">'method'</span>,<span class="s">'model'</span>,<span class="s">'dataset'</span>,<span class="s">'max_seq_length'</span>, <span class="c">/* …variants… */</span>]
+<span class="k">function</span> <span class="f">isScopeChange</span>(configChanges) {
+  <span class="k">return</span> Object.keys(configChanges).some(k =&gt; PROTECTED_KEYS.includes(k.toLowerCase()))
+}
+<span class="c">// in the retry loop:</span>
+<span class="k">const</span> scope = analysis.scopeChange || <span class="f">isScopeChange</span>(analysis.configChanges)
+<span class="k">if</span> (scope) <span class="k">return</span> { stopped: <span class="k">true</span>, stoppedReason: <span class="s">'scope_change'</span> } <span class="c">// STOP, ask the user</span></pre>
+        <p><b>Billable-submit invariant (§5.6).</b> Run before <i>every</i> paid submit; refuses to launch unless the
+        code is present by value, the timeout is sized, monitoring is wired, and no local path leaked:</p>
+        <pre class="code"><span class="k">function</span> <span class="f">assertSubmitInvariant</span>(impl) {
+  <span class="c">// missing unless: trainScriptContent (inline, &gt;=50 chars), timeoutHours,</span>
+  <span class="c">// monitoringWired, and NO /Users/ or ./ml-run/ path in the script source</span>
+  <span class="k">return</span> { ok: missing.length === 0, missing }
+}</pre>
+      </div></details>
+
+      <details class="acc" id="mech-retry"><summary>attemptWithRetry — analyze → minimal-fix → retry<span class="chev">›</span></summary><div class="body">
+        <p>One helper drives CPU smoke, GPU preflight, and the full job. It never retries unchanged (R10): every retry
+        is preceded by a diagnosis and a bounded, scope-safe fix.</p>
+        <pre class="code"><span class="k">for</span> (<span class="k">let</span> attempt = 1; attempt &lt;= maxAttempts; attempt++) {
+  <span class="k">const</span> res = <span class="k">await</span> submit(attempt, ctx)
+  <span class="k">if</span> (res.status === <span class="s">'success'</span>) <span class="k">return</span> res          <span class="c">// done</span>
+  <span class="k">if</span> (attempt === maxAttempts) <span class="k">return</span> { stopped:<span class="k">true</span>, stoppedReason:<span class="s">'retries_exhausted'</span> }
+  <span class="k">const</span> analysis = <span class="k">await</span> analyze(attempt, res, ctx)   <span class="c">// FAILURE_ANALYSIS</span>
+  <span class="k">if</span> (scopeChange || analysis.unrecoverable) <span class="k">return</span> { stopped:<span class="k">true</span> }  <span class="c">// STOP</span>
+  <span class="k">await</span> applyFix(analysis, ctx)                       <span class="c">// edit train.py</span>
+  ctx.oomLadderRung = Math.max(ctx.oomLadderRung, analysis.oomLadderRung)  <span class="c">// R7 ladder carries</span>
+}</pre>
+        <p>The carried <code>ctx</code> remembers the OOM ladder rung (so R7 escalates 1→2→3 across attempts) and the
+        alert poll cursor (<code>--since</code>).</p>
+      </div></details>
+
+      <details class="acc" id="mech-critics"><summary>The four adversarial critics<span class="chev">›</span></summary><div class="body">
+        <p>Each is a read-only <code>Explore</code> agent returning a <code>CRITIC_SCHEMA</code> with a
+        <code>mustReblock</code> flag. They turn "verify, never assume" into a tool-backed second opinion at the
+        riskiest moments:</p>
+        <ul class="tight">
+          <li><b>Verify Research</b> (Phase 2) — do cited papers/datasets/models exist; are APIs real?</li>
+          <li><b>Format critic</b> (Phase 4) — is the dataset shape compatible with the method, or remappable?</li>
+          <li><b>Code review</b> (Phase 6) — hallucinated imports, local-path leak, missing persistence/monitoring.</li>
+          <li><b>Final verification</b> (finalize) — tool-backed conformance against the spec §9 criteria.</li>
+        </ul>
+      </div></details>
+
+      <details class="acc" id="mech-profiles"><summary>TASK_PROFILES — declarative genericity<span class="chev">›</span></summary><div class="body">
+        <p>One table lets a single pipeline serve every task type without per-type branching. Each profile names the
+        skill, the per-method reference script, the dataset inspector, the eval skill, and the schema rules:</p>
+        <pre class="code">llm: {
+  skill: <span class="s">'huggingface-skills:huggingface-llm-trainer'</span>,
+  scriptByMethod: { sft:<span class="s">'train_sft_example.py'</span>, dpo:<span class="s">'train_dpo_example.py'</span>, grpo:<span class="s">'train_grpo_example.py'</span> },
+  evalSkill: <span class="s">'huggingface-skills:huggingface-community-evals'</span>,
+  schemaRules: { sft:<span class="s">'messages | text | prompt+completion'</span>, dpo:<span class="s">'prompt, chosen, rejected'</span>, grpo:<span class="s">'prompt'</span> },
+}</pre>
+        <p>Profiles <code>eval</code> (<code>evalOnly</code>) and <code>data</code> (<code>dataOnly</code>) trigger the
+        early exits; <code>vision</code>, <code>embedding</code>, and <code>other</code> reuse the same flow.</p>
+      </div></details>
+
+      <details class="acc" id="mech-taxonomy"><summary>FAILURE_TAXONOMY — a closed set of fixes<span class="chev">›</span></summary><div class="body">
+        <p>The analysis prompt injects a closed list of failure categories, each with the <i>only</i> allowed minimal
+        fix — so diagnosis is constrained, not open-ended. A few:</p>
+        <ul class="tight">
+          <li><b>oom</b> → the R7 ladder in order (preserve effective batch → grad-checkpoint → bigger memory); never
+          reduce seqlen or switch method.</li>
+          <li><b>wrong_trainer_arg</b> → re-check current docs (R11) and correct the kwarg; set <code>recheckedDocs</code>.</li>
+          <li><b>dataset_schema_mismatch</b> → remap columns; if fields genuinely missing → scope-change STOP (R8).</li>
+          <li><b>timeout</b> → raise the timeout (R5); shrinking data/epochs/seqlen to fit is a forbidden scope change.</li>
+          <li><b>divergence_nan</b> → corrective config change (lr×0.1 or per the alert) — iteration, not a crash.</li>
+        </ul>
+      </div></details>
+
+      <details class="acc" id="mech-rules"><summary>HARD_RULES + SKILLS_NOTE — the shared preamble<span class="chev">›</span></summary><div class="body">
+        <p>Implementation and analysis prompts are prefixed with a <code>HARD_RULES</code> block that restates R1–R14
+        and the principles in imperative form (research-grounded, verify-never-assume, no silent scope change, no silent
+        substitution, persistence, sized timeout/hardware, the OOM ladder, prefer prebuilt, secrets-from-env, direct
+        URLs), plus a <code>SKILLS_NOTE</code> telling the agent to drive the HF skills and prefer their shipped
+        reference scripts over writing ML code from memory.</p>
+      </div></details>
+
+      <details class="acc" id="mech-cost"><summary>Cost-cap gating — autonomous spend, bounded<span class="chev">›</span></summary><div class="body">
+        <p>Two helpers bound HF spend independently of the harness token budget. Each billable submit is gated:</p>
+        <pre class="code"><span class="k">function</span> <span class="f">canSpend</span>(estUSD){ <span class="k">return</span> (spentUSD + estUSD) &lt;= COST_CAP_USD }
+<span class="c">// before GPU preflight and before the full job:</span>
+<span class="k">if</span> (!<span class="f">canSpend</span>(est)) <span class="k">return</span> { stoppedReason: <span class="s">'cost_cap_full_job'</span> }  <span class="c">// fully prepared; only spend is gated</span>
+<span class="f">recordSpend</span>(actualOrEstimatedUSD)  <span class="c">// accrue after submit</span></pre>
+      </div></details>
+
+      <details class="acc" id="mech-schemas"><summary>The 13 forced-output schemas<span class="chev">›</span></summary><div class="body">
+        <p>Every subagent is forced to return a validated object, so the orchestrator branches on fields rather than
+        parsing prose:</p>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>Schema</th><th>Phase</th><th>Key fields the orchestrator branches on</th></tr></thead>
+          <tbody>
+            <tr><td class="id">PLAN</td><td>0</td><td><code>isTrivial</code>, <code>taskType</code>, <code>method</code>, <code>baseline</code></td></tr>
+            <tr><td class="id">FINDER</td><td>1</td><td><code>findings</code>, <code>sources</code>, <code>fidelity</code></td></tr>
+            <tr><td class="id">RESEARCH</td><td>1</td><td><code>recipe[]</code>, <code>codePatterns[]</code>, <code>citationGraphFidelity</code></td></tr>
+            <tr><td class="id">CRITIC</td><td>2,4,6</td><td><code>ok</code>, <code>mustReblock</code>, <code>issues[]</code></td></tr>
+            <tr><td class="id">RESOURCE</td><td>3</td><td><code>modelVerified.exists</code>, <code>datasetVerified.exists</code>, <code>needsUserDecision</code></td></tr>
+            <tr><td class="id">DATA_AUDIT</td><td>4</td><td><code>formatCompatible</code>, <code>requiredFields</code>, <code>mappingNeeded</code></td></tr>
+            <tr><td class="id">IMPL</td><td>5</td><td><code>trainScriptContent</code>, <code>persistenceDest</code>, <code>timeoutHours</code>, <code>monitoringWired</code>, <code>smokeKnobs</code></td></tr>
+            <tr><td class="id">SMOKE</td><td>7</td><td><code>status</code>, <code>usedProxyModel</code></td></tr>
+            <tr><td class="id">JOB</td><td>8,10</td><td><code>status</code>, <code>healthy</code>, <code>alerts[]</code>, <code>lastAlertTimestamp</code></td></tr>
+            <tr><td class="id">FAILURE_ANALYSIS</td><td>7,8,10</td><td><code>category</code>, <code>configChanges</code>, <code>scopeChange</code>, <code>oomLadderRung</code>, <code>unrecoverable</code></td></tr>
+            <tr><td class="id">CHECKLIST</td><td>9</td><td><code>allSatisfied</code>, <code>missing[]</code></td></tr>
+            <tr><td class="id">EVAL</td><td>11</td><td><code>evaluated</code>, <code>confirmedWorks</code>, <code>modelUrl</code></td></tr>
+            <tr><td class="id">COMPLETION</td><td>final</td><td><code>conforms</code>, <code>missing[]</code>, <code>artifacts[]</code></td></tr>
+          </tbody>
+        </table></div>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- STOP CONDITIONS -->
+  <section id="stops">
+    <div class="sec-head"><h2>Where it stops</h2><span class="tag">result.stoppedReason</span></div>
+    <p class="sec-sub">The workflow is designed to <b>halt and surface to the user</b> rather than push through a
+    violation. Every stop sets a machine-readable <code>stoppedReason</code>.</p>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>stoppedReason</th><th>Phase</th><th>Why it stops</th></tr></thead>
+      <tbody>
+        <tr><td class="id">resource_unavailable</td><td>3</td><td>Requested model/dataset missing or unusable — ask, don't substitute (R8). <span class="pill stop">no-substitute</span></td></tr>
+        <tr><td class="id">dataset_format_incompatible</td><td>4</td><td>Schema can't satisfy the method and can't be remapped (R8).</td></tr>
+        <tr><td class="id">cpu_smoke_* / gpu_preflight_* / full_job_*</td><td>7,8,10</td><td>Could not be made to pass within retries/rules.</td></tr>
+        <tr><td class="id">scope_change</td><td>7,8,10</td><td>The only viable fix would touch a protected key (R3/R4/R7). <span class="pill guard">pure guard</span></td></tr>
+        <tr><td class="id">cost_cap_preflight / cost_cap_full_job</td><td>8,10</td><td>Estimated spend would exceed <code>COST_CAP_USD</code>. Job is prepared; only spend is gated.</td></tr>
+        <tr><td class="id">submit_invariant_preflight / _full</td><td>8,10</td><td>By-value / timeout / monitoring / no-local-path invariant failed. <span class="pill guard">pure guard</span></td></tr>
+        <tr><td class="id">preflight_checklist_unsatisfied</td><td>9</td><td>The §5.6 pre-flight checklist gate did not pass.</td></tr>
+        <tr><td class="id">planning_failed / implementation_failed</td><td>0,5</td><td>A required subagent returned nothing usable.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- CONFIG -->
+  <section id="config">
+    <div class="sec-head"><h2>Config &amp; arguments</h2><span class="tag">args = task string, or { … }</span></div>
+    <div class="grid g2 kw-scan">
+      <div class="card"><h3>Inputs</h3>
+        <ul class="tight" style="margin:0">
+          <li><code>task</code> — the request (or pass <code>args</code> as a bare string).</li>
+          <li><code>model</code>, <code>dataset</code> — optional explicit resources.</li>
+          <li><code>hubOrg</code> — namespace for persisted outputs.</li>
+          <li><code>costCapUSD</code> — default <b>10</b>; the autonomous spend ceiling.</li>
+          <li><code>maxJobRetries</code> — default <b>3</b>; GPU preflight + full job.</li>
+          <li><code>smokeModel</code>, <code>workDir</code> — proxy model; default <code>./ml-run</code>.</li>
+        </ul>
+      </div>
+      <div class="card"><h3>Run-level state</h3>
+        <ul class="tight" style="margin:0">
+          <li><code>spentUSD</code> — accrues across billable submits.</li>
+          <li><code>result</code> — accumulates every phase's output, <code>artifacts[]</code>, and
+          <code>stoppedReason</code> / <code>conforms</code>.</li>
+          <li><code>baseline</code> — the frozen user intent the scope-change guard compares against.</li>
+          <li><code>SMOKE_RETRIES = 3</code> — CPU smoke attempts.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note kw-scan">For a guided view of how each spec section maps onto these phases and mechanisms, open
+      <a href="spec-to-script-map.html"><b>③ Spec → script map</b></a>.</div>
+  </section>
+
+</main>
+
+<footer>
+  Interactive rendering of <code>.claude/workflows/ml-research.js</code> — the workflow script that encodes
+  <code>docs/ml-research-workflow-spec.md</code> on top of the Hugging Face skills. Code excerpts are condensed for
+  readability; see the script for exact text.
+</footer>
+
+<button class="totop" id="totop" aria-label="Back to top">↑</button>
+
+<script>
+(function(){
+  function highlight(root){
+    var re=/\b(MUST NOT|MUST|SHOULD NOT|SHOULD|MAY)\b/g;
+    var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(n){
+      if(!n.nodeValue||!re.test(n.nodeValue)){re.lastIndex=0;return NodeFilter.FILTER_REJECT;}
+      re.lastIndex=0; var p=n.parentNode; if(!p) return NodeFilter.FILTER_REJECT;
+      var t=p.nodeName; if(t==='SCRIPT'||t==='STYLE'||t==='CODE'||t==='PRE'||p.classList.contains('kw')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    var nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node){
+      var s=node.nodeValue, frag=document.createDocumentFragment(), last=0, m; re.lastIndex=0;
+      while((m=re.exec(s))){
+        if(m.index>last) frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+        var sp=document.createElement('span'), t=m[1];
+        sp.className='kw '+(t.indexOf('MUST')===0?'kw-must':t.indexOf('SHOULD')===0?'kw-should':'kw-may');
+        sp.textContent=t; frag.appendChild(sp); last=m.index+m[0].length;
+      }
+      if(last<s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+      node.parentNode.replaceChild(frag,node);
+    });
+  }
+  document.querySelectorAll('.kw-scan').forEach(highlight);
+
+  function openAncestors(el){var d=el.closest('details'); while(d){d.open=true; d=d.parentElement&&d.parentElement.closest('details');}}
+  function flash(el){el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');}
+  function reveal(id){var el=document.getElementById(id); if(!el) return; if(el.tagName==='DETAILS') el.open=true; openAncestors(el); el.scrollIntoView({behavior:'smooth',block:'center'}); flash(el);}
+  document.querySelectorAll('.node[data-target]').forEach(function(g){
+    function act(){reveal(g.getAttribute('data-target'));}
+    g.addEventListener('click',act);
+    g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+  });
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href^="#"]'); if(!a) return;
+    var id=a.getAttribute('href').slice(1); if(!id) return;
+    var el=document.getElementById(id); if(!el) return;
+    e.preventDefault(); reveal(id); history.replaceState(null,'',a.getAttribute('href'));
+  });
+  var btn=document.getElementById('totop');
+  window.addEventListener('scroll',function(){btn.classList.toggle('show', window.scrollY>600);});
+  btn.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+})();
+</script>
+</body>
+</html>

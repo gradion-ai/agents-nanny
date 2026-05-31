@@ -1,0 +1,1 @@
+Create a technology-neutral specification of the research workflow encoded in https://github.com/huggingface/ml-intern. Assume availability of https://github.com/huggingface/skills that any implementer of the spec can use (instead of ml-intern's custom tools).

@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML Research Workflow — Interactive Spec</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --panel:#ffffff; --ink:#0f172a; --muted:#475569; --faint:#94a3b8;
+    --line:#e2e8f0; --accent:#6366f1; --accent-ink:#4338ca;
+    --plan:#64748b; --research:#6366f1; --validate:#0d9488; --build:#d97706;
+    --monitor:#9333ea; --complete:#16a34a;
+    --must:#dc2626; --should:#b45309; --may:#64748b;
+    --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent-ink); text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- layout ---------- */
+  header.top{
+    position:sticky; top:0; z-index:50; backdrop-filter:saturate(150%) blur(8px);
+    background:rgba(255,255,255,.82); border-bottom:1px solid var(--line);
+  }
+  .top-inner{max-width:1120px; margin:0 auto; padding:10px 22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+  .brand{font-weight:750; letter-spacing:-.01em; font-size:15.5px; white-space:nowrap}
+  .brand .dot{color:var(--accent)}
+  nav.jump{display:flex; gap:4px; flex-wrap:wrap; margin-left:auto}
+  nav.jump a{
+    font-size:12.5px; color:var(--muted); padding:5px 9px; border-radius:7px; white-space:nowrap;
+  }
+  nav.jump a:hover{background:#eef0f7; text-decoration:none; color:var(--ink)}
+  .siblings{display:flex; gap:6px; width:100%; padding:0 22px 8px; max-width:1120px; margin:0 auto; flex-wrap:wrap}
+  .siblings a{font-size:11.5px; padding:4px 10px; border-radius:999px; border:1px solid var(--line); color:var(--muted); background:#fff}
+  .siblings a.here{background:var(--accent); color:#fff; border-color:var(--accent)}
+
+  main{max-width:1120px; margin:0 auto; padding:30px 22px 120px}
+  section{margin:46px 0; scroll-margin-top:70px}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:8px}
+  .sec-head h2{font-size:22px; margin:0; letter-spacing:-.02em}
+  .sec-head .tag{font-size:12px; color:var(--faint); font-weight:600}
+  .sec-sub{color:var(--muted); margin:0 0 18px; max-width:75ch}
+
+  /* ---------- hero ---------- */
+  .hero{
+    background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#4338ca 100%);
+    color:#e7e9ff; border-radius:18px; padding:34px 34px 30px; box-shadow:var(--shadow);
+    position:relative; overflow:hidden;
+  }
+  .hero h1{margin:0 0 8px; font-size:30px; letter-spacing:-.025em; color:#fff}
+  .hero p{margin:0; max-width:78ch; color:#c7caff}
+  .hero .kw-legend{margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; font-size:12.5px}
+  .hero .kw-legend span{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); padding:4px 10px; border-radius:999px}
+  .hero .glow{position:absolute; width:380px; height:380px; right:-90px; top:-120px; background:radial-gradient(circle,rgba(129,140,248,.45),transparent 70%); pointer-events:none}
+
+  .stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:18px}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow)}
+  .stat b{display:block; font-size:24px; letter-spacing:-.02em}
+  .stat span{color:var(--muted); font-size:12.5px}
+
+  /* ---------- cards / grid ---------- */
+  .grid{display:grid; gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow)}
+  .card h3{margin:0 0 6px; font-size:15px; letter-spacing:-.01em}
+  .card p{margin:0; color:var(--muted); font-size:13.5px}
+  .pcard{border-left:4px solid var(--accent)}
+  .pcard .pn{font-size:11px; font-weight:700; color:var(--accent); letter-spacing:.08em; text-transform:uppercase}
+
+  /* ---------- diagram ---------- */
+  .diagram-wrap{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:10px; box-shadow:var(--shadow)}
+  .diagram-hint{display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:8px 12px 4px; color:var(--muted); font-size:12.5px}
+  .legend-chip{display:inline-flex; align-items:center; gap:6px}
+  .legend-chip i{width:11px; height:11px; border-radius:3px; display:inline-block}
+  svg.flow{width:100%; height:auto; display:block}
+  .node{cursor:pointer}
+  .node .box{fill:color-mix(in srgb,var(--c) 9%,#fff); stroke:var(--c); stroke-width:1.6; transition:fill .15s ease}
+  .node:hover .box{fill:color-mix(in srgb,var(--c) 20%,#fff)}
+  .node:focus{outline:none}
+  .node:focus .box{stroke-width:2.6}
+  .node .badge{fill:var(--c)}
+  .node .num{fill:#fff; font:700 16px/1 sans-serif; text-anchor:middle}
+  .node .title{fill:#0f172a; font:650 15px/1 sans-serif}
+  .node .sub{fill:#64748b; font:12px/1 sans-serif}
+  .node.sub-node .box{stroke-dasharray:5 4}
+  .gatepill{fill:color-mix(in srgb,var(--c) 16%,#fff); stroke:var(--c); stroke-width:1}
+  .gatepill-tx{fill:var(--c); font:700 9.5px/1 sans-serif; letter-spacing:.06em; text-anchor:middle}
+  .conn{stroke:#cbd5e1; stroke-width:2; fill:none}
+  .loop{stroke:var(--monitor); stroke-width:2.2; stroke-dasharray:7 6; fill:none}
+  .loop-tx{fill:var(--monitor); font:600 12px/1 sans-serif}
+
+  /* ---------- accordions / details ---------- */
+  details.acc{background:var(--panel); border:1px solid var(--line); border-radius:12px; margin:10px 0; box-shadow:var(--shadow); overflow:hidden}
+  details.acc>summary{
+    list-style:none; cursor:pointer; padding:14px 18px; display:flex; align-items:center; gap:12px; font-weight:600;
+  }
+  details.acc>summary::-webkit-details-marker{display:none}
+  details.acc>summary .chev{margin-left:auto; color:var(--faint); transition:transform .2s ease}
+  details.acc[open]>summary .chev{transform:rotate(90deg)}
+  details.acc>summary:hover{background:#fafbff}
+  details.acc .body{padding:2px 18px 18px; border-top:1px solid var(--line)}
+  .pnum{display:inline-flex; align-items:center; justify-content:center; min-width:30px; height:30px; padding:0 8px; border-radius:8px; font-weight:700; font-size:13px; color:#fff}
+  .badge-gate{font-size:10px; font-weight:700; letter-spacing:.06em; color:var(--build); background:color-mix(in srgb,var(--build) 14%,#fff); border:1px solid var(--build); border-radius:999px; padding:3px 8px; text-transform:uppercase}
+
+  ul.tight{margin:10px 0; padding-left:20px}
+  ul.tight li{margin:5px 0}
+  .sublabel{font-weight:700; color:var(--ink)}
+  .note{background:#f8fafc; border:1px dashed var(--line); border-radius:10px; padding:10px 14px; margin:12px 0; font-size:13.5px; color:var(--muted)}
+  code{background:#eef0f7; padding:1.5px 6px; border-radius:6px; font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; color:#3730a3}
+
+  /* chips linking to rules / caps */
+  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:12px}
+  .chip{
+    font:600 11.5px/1 sans-serif; padding:5px 9px; border-radius:7px; border:1px solid var(--line);
+    background:#f8fafc; color:var(--muted); cursor:pointer; transition:all .12s ease;
+  }
+  .chip:hover{text-decoration:none; border-color:var(--accent); color:var(--accent-ink); background:#eef0ff}
+  .chip.r{border-color:#fecaca; color:#b91c1c; background:#fef2f2}
+  .chip.r:hover{background:#fee2e2}
+  .chip.c{border-color:#bfdbfe; color:#1d4ed8; background:#eff6ff}
+  .chip.c:hover{background:#dbeafe}
+
+  /* keyword styling */
+  .kw{font-weight:700; padding:0 2px; border-radius:3px}
+  .kw-must{color:var(--must)}
+  .kw-should{color:var(--should)}
+  .kw-may{color:var(--may)}
+
+  /* tables */
+  .tbl-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow)}
+  table{border-collapse:collapse; width:100%; background:var(--panel); font-size:13.5px}
+  th,td{text-align:left; padding:10px 13px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{background:#f8fafc; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); position:sticky; top:0}
+  tbody tr:hover{background:#fafbff}
+  td.id{font-weight:700; white-space:nowrap; color:var(--accent-ink)}
+  .gapflag{display:inline-block; font-size:10.5px; font-weight:700; color:var(--build); background:color-mix(in srgb,var(--build) 14%,#fff); border:1px solid var(--build); padding:2px 6px; border-radius:5px; margin-left:4px}
+
+  /* rule cards */
+  .rule{background:var(--panel); border:1px solid var(--line); border-left:4px solid #cbd5e1; border-radius:10px; padding:12px 15px; box-shadow:var(--shadow)}
+  .rule .rid{font-weight:800; color:var(--ink); margin-right:8px}
+  .rule.flash, details.flash, tr.flash td, .pcard.flash{animation:flash 1.6s ease}
+  @keyframes flash{0%{background:#fff7cd}30%{background:#fff7cd}100%{background:initial}}
+
+  .group-h{font-size:12.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:20px 0 8px}
+
+  footer{max-width:1120px; margin:0 auto; padding:30px 22px 60px; color:var(--faint); font-size:12.5px; border-top:1px solid var(--line)}
+  .totop{position:fixed; right:18px; bottom:18px; background:var(--accent); color:#fff; border:none; width:42px; height:42px; border-radius:12px; font-size:18px; cursor:pointer; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s}
+  .totop.show{opacity:1; pointer-events:auto}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="gradion-theme">
+  /* ===== Gradion AI dark theme (matches gradion-ai.github.io/agents-nanny) ===== */
+  :root{
+    --bg:#0a0a0f; --panel:#15151f; --panel-2:#1f1f2b;
+    --ink:#f5f8fc; --body:#aab6c6; --muted:#94a3b8; --faint:#647489;
+    --line:rgba(148,163,184,.10); --line-strong:rgba(148,163,184,.18);
+    --accent:#38bdf8; --accent-ink:#7dd3fc; --violet:#a78bfa; --purple:#8b5cf6;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px rgba(0,0,0,.40);
+    --plan:#8a99ad; --research:#818cf8; --validate:#2dd4bf; --build:#fbbf24;
+    --monitor:#c084fc; --complete:#4ade80; --test:#f472b6; --run:#c084fc;
+    --must:#fb7185; --should:#fbbf24; --may:#94a3b8;
+    --layerA:#38bdf8; --layerB:#fb7185; --layerC:#a78bfa;
+  }
+  body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:var(--body); background:var(--bg)}
+  code,pre.code,pre.code *{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+  h1,h2,h3,.sec-head h2,.card h3,.layer h3,.callout h3,.stat b,.rule .rid,.sublabel,details.acc>summary{color:var(--ink)}
+  :focus-visible{outline:2px solid var(--accent-ink); outline-offset:2px}
+
+  header.top{background:rgba(10,10,15,.86); border-bottom:1px solid var(--line)}
+  .brand{color:var(--ink)}
+  nav.jump a{color:var(--muted)} nav.jump a:hover{background:var(--panel-2); color:var(--ink)}
+  .siblings a{background:var(--panel); border-color:var(--line-strong); color:var(--muted)}
+  .siblings a.here{background:var(--accent); color:#06121b; border-color:var(--accent)}
+
+  .hero{border:1px solid var(--line-strong); background:
+    radial-gradient(120% 140% at 100% 0%, rgba(56,189,248,.15), transparent 55%),
+    radial-gradient(120% 140% at 0% 100%, rgba(167,139,250,.16), transparent 55%),
+    linear-gradient(135deg,#0e1018 0%,#13151f 55%,#161827 100%)}
+  .hero h1{color:#fff} .hero p{color:#cdd6e3}
+  .hero code{background:rgba(255,255,255,.10); color:#e2e8f0}
+  .hero .glow{background:radial-gradient(circle,rgba(56,189,248,.32),transparent 70%)}
+  .hero .kw-legend span{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.12)}
+
+  .card,.stat,.diagram-wrap,details.acc,.tbl-scroll,.layer,.rule{background:var(--panel); border-color:var(--line)}
+  .card p,.sec-sub,.stat span,.card .ic,.layer .sub,.diagram-hint{color:var(--muted)}
+  details.acc>summary:hover{background:var(--panel-2)} details.acc .body{border-top-color:var(--line)}
+  .note{background:var(--panel-2); border-color:var(--line-strong); color:var(--muted)}
+  .group-h{color:var(--muted)} .rule{border-left-color:var(--line-strong)}
+  .pcard{border-left-color:var(--accent)}
+
+  code{background:var(--panel-2); border:1px solid var(--line-strong); color:#cdd6e1}
+  pre.code{background:#0c0e15; border:1px solid var(--line); color:#c9d1d9}
+  pre.code .c{color:#5b6b78} pre.code .k{color:#b394d6} pre.code .s{color:#3ec6b6} pre.code .f{color:#4aa3e0}
+
+  th{background:rgba(56,189,248,.08); color:var(--muted); border-bottom-color:var(--line)}
+  td{border-bottom-color:var(--line)} tbody tr:hover{background:var(--panel-2)} td.id{color:var(--accent-ink)}
+
+  .chip{background:var(--panel-2); border-color:var(--line-strong); color:var(--muted)}
+  .chip:hover{border-color:var(--accent); color:var(--accent-ink); background:rgba(56,189,248,.10)}
+  .chip.c{border-color:rgba(56,189,248,.4); color:#7dd3fc; background:rgba(56,189,248,.08)} .chip.c:hover{background:rgba(56,189,248,.16)}
+  .chip.r{border-color:rgba(251,113,133,.4); color:#fda4af; background:rgba(251,113,133,.08)} .chip.r:hover{background:rgba(251,113,133,.16)}
+  .chip.m{border-color:rgba(167,139,250,.4); color:#c4b5fd; background:rgba(167,139,250,.10)} .chip.m:hover{background:rgba(167,139,250,.18)}
+
+  .badge-gate{color:var(--build); background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.5)}
+  .gapflag{color:var(--build); background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.5)}
+  .omitflag{color:#fda4af; background:rgba(251,113,133,.10); border-color:rgba(251,113,133,.45)}
+  .pill.guard{color:#7dd3fc; background:rgba(56,189,248,.10); border-color:rgba(56,189,248,.4)}
+  .pill.stop{color:#fda4af; background:rgba(251,113,133,.10); border-color:rgba(251,113,133,.45)}
+
+  .callout{background:var(--panel); border-color:var(--line-strong)} .callout h3{color:var(--ink)} .callout p,.callout li{color:var(--muted)}
+  .callout.keep{border-left-color:var(--complete); background:rgba(74,222,128,.07)} .callout.keep h3{color:#86efac}
+  .callout.adapt{border-left-color:var(--build); background:rgba(251,191,36,.07)} .callout.adapt h3{color:#fcd34d}
+  .callout.omit{border-left-color:#fb7185; background:rgba(251,113,133,.07)} .callout.omit h3{color:#fda4af}
+  .lt.A,.lp.A{background:var(--layerA); color:#06121b} .lt.B,.lp.B{background:var(--layerB); color:#2a0610} .lt.C,.lp.C{background:var(--layerC); color:#140a26}
+
+  .diagram-wrap{background:var(--panel)}
+  .node .box{fill:color-mix(in srgb,var(--c) 18%,var(--panel)); stroke:var(--c)}
+  .node:hover .box{fill:color-mix(in srgb,var(--c) 30%,var(--panel))}
+  .node .title,.node .t{fill:var(--ink)} .node .sub,.node .s{fill:var(--muted)}
+  .node:focus .box,.node:focus .b{stroke-width:2.6}
+  .conn{stroke:rgba(148,163,184,.42)}
+  .gatepill{fill:color-mix(in srgb,var(--c) 24%,var(--panel)); stroke:var(--c)}
+  .specbox .b{fill:color-mix(in srgb,var(--c) 16%,var(--panel)); stroke:var(--c)}
+  .scrbox .b{fill:var(--panel-2); stroke:var(--c)}
+  .node.omit .b{fill:#191a24; stroke:#3a4150} .node.omit .t{fill:var(--faint)}
+  .colhead{fill:var(--muted)}
+  .ann{fill:var(--muted)} .ann.stop{fill:#fb7185} .ann.cost{fill:#fb7185}
+  .tagmark.add{fill:#5eead4} .tagmark.adapt{fill:#fcd34d} .tagmark.omit{fill:#fda4af}
+
+  .kw-must{color:#fb7185} .kw-should{color:#fbbf24} .kw-may{color:#94a3b8}
+  @keyframes flash{0%{background:rgba(56,189,248,.20)}30%{background:rgba(56,189,248,.20)}100%{background:transparent}}
+  footer{border-top-color:var(--line); color:var(--faint)} footer code{background:var(--panel-2)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">ML Research Workflow <span class="dot">●</span> Spec Explorer</div>
+    <nav class="jump">
+      <a href="#overview">Overview</a>
+      <a href="#principles">Principles</a>
+      <a href="#flow">Workflow</a>
+      <a href="#roles">Roles</a>
+      <a href="#caps">Capabilities</a>
+      <a href="#rules">Hard rules</a>
+      <a href="#contract">Control contract</a>
+      <a href="#state">State</a>
+      <a href="#done">Done</a>
+      <a href="#appendix">Appendices</a>
+    </nav>
+  </div>
+  <div class="siblings">
+    <a href="workflow-spec.html" class="here">① Spec explorer</a>
+    <a href="workflow-script.html">② Script internals</a>
+    <a href="spec-to-script-map.html">③ Spec → script map</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <section id="overview">
+    <div class="hero">
+      <div class="glow"></div>
+      <h1>An autonomous ML researcher, as a behavioral spec</h1>
+      <p class="kw-scan">Given a request to train, fine-tune, evaluate, process data for, or run inference with a model,
+      the system <b>researches the current literature and tooling, validates resources, implements a solution
+      grounded in that research, runs it on managed compute, monitors it, iterates to improve it, and delivers a
+      persisted, verified result</b> with zero avoidable errors. This document is a technology-neutral
+      <i>behavioral specification</i> — the workflow, the rules, and the control contract — not an implementation.</p>
+      <div class="kw-legend">
+        <span><span class="kw kw-must">MUST</span> / MUST NOT — non-negotiable</span>
+        <span><span class="kw kw-should">SHOULD</span> — strong default</span>
+        <span><span class="kw kw-may">MAY</span> — permitted</span>
+        <span>Numbers are tunable reference defaults; the <i>shape</i> of each rule is normative</span>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><b>5</b><span>design principles (the invariants)</span></div>
+      <div class="stat"><b>8</b><span>workflow phases (0 → 7) + autonomous loop</span></div>
+      <div class="stat"><b>14</b><span>hard rules (R1–R14)</span></div>
+      <div class="stat"><b>14</b><span>abstract capabilities (C1–C14)</span></div>
+      <div class="stat"><b>8</b><span>harness control-contract guards</span></div>
+    </div>
+
+    <div class="grid g2" style="margin-top:18px">
+      <div class="card kw-scan">
+        <h3>In scope</h3>
+        <p>The end-to-end research-and-engineering workflow, the hard rules that keep it from failing or drifting,
+        and the harness control contract that keeps the autonomous loop productive and bounded.</p>
+      </div>
+      <div class="card kw-scan">
+        <h3>Out of scope</h3>
+        <p>Concrete tool APIs (provided by <code>hf-skills</code>), UI, transport, billing, and model-provider
+        specifics. Wherever the workflow needs a concrete capability, the spec names an abstract capability and
+        maps it to <code>hf-skills</code> in Appendix&nbsp;A.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PRINCIPLES ===================== -->
+  <section id="principles">
+    <div class="sec-head"><h2>Design principles</h2><span class="tag">§2 · the invariants that motivate everything</span></div>
+    <p class="sec-sub">These five principles are the reason every later rule exists. An implementation that preserves
+    them while changing the mechanics is still conformant.</p>
+    <div class="grid g2 kw-scan">
+      <div class="card pcard" id="P1"><span class="pn">Principle 1</span><h3>Assume internal ML knowledge is stale</h3>
+        <p>The agent MUST NOT write ML code from memory. Every implementation MUST be grounded in freshly retrieved
+        literature, documentation, and <b>working example code</b>. Research is the primary mechanism that prevents
+        hallucinated imports and wrong configs.</p></div>
+      <div class="card pcard" id="P2"><span class="pn">Principle 2</span><h3>Verify, never assume</h3>
+        <p>Resource existence, model architecture/size, dataset schema and columns, and format-to-method
+        compatibility MUST be confirmed by inspection before any expensive operation.</p></div>
+      <div class="card pcard" id="P3"><span class="pn">Principle 3</span><h3>Test small before you spend big</h3>
+        <p>Code MUST be smoke-tested on representative-but-tiny inputs/hardware before launch at full scale. One
+        verified small run precedes any batch, sweep, or long job.</p></div>
+      <div class="card pcard" id="P4"><span class="pn">Principle 4</span><h3>Persist or lose it</h3>
+        <p>Compute environments are ephemeral. Any artifact that must survive MUST be explicitly pushed to durable
+        storage <i>as part of the run</i>, not after.</p></div>
+      <div class="card pcard" id="P5"><span class="pn">Principle 5</span><h3>Preserve the user's intent</h3>
+        <p>When something fails, the fix MUST be the minimal change that keeps the original request intact. The agent
+        MUST NOT silently change the task (method, dataset, model, sequence length) to make an error go away.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== WORKFLOW DIAGRAM ===================== -->
+  <section id="flow">
+    <div class="sec-head"><h2>The workflow</h2><span class="tag">§5 · research-first, validate-before-spend, monitor-and-iterate</span></div>
+    <p class="sec-sub">A research-first, plan-tracked, validate-before-spend, monitor-and-iterate loop. Trivial
+    non-code requests MAY be answered directly; anything that produces or runs ML code runs the full workflow.
+    <b>Click any phase</b> to open its detail. <b>Click <span class="chip c" style="cursor:default">C#</span> /
+    <span class="chip r" style="cursor:default">R#</span> chips</b> to jump to capabilities &amp; hard rules.</p>
+
+    <div class="diagram-wrap">
+      <div class="diagram-hint">
+        <span class="legend-chip"><i style="background:var(--plan)"></i>Plan</span>
+        <span class="legend-chip"><i style="background:var(--research)"></i>Research</span>
+        <span class="legend-chip"><i style="background:var(--validate)"></i>Validate</span>
+        <span class="legend-chip"><i style="background:var(--build)"></i>Build &amp; launch</span>
+        <span class="legend-chip"><i style="background:var(--monitor)"></i>Monitor / iterate</span>
+        <span class="legend-chip"><i style="background:var(--complete)"></i>Complete</span>
+        <span class="legend-chip" style="margin-left:auto"><span class="badge-gate">gate</span> mandatory checkpoint</span>
+      </div>
+
+      <svg class="flow" viewBox="0 0 1040 1080" role="img" aria-label="ML research workflow diagram">
+        <defs>
+          <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"></path>
+          </marker>
+          <marker id="arrL" markerWidth="11" markerHeight="11" refX="7" refY="3.2" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L7.5,3.2 L0,6.4 Z" fill="#9333ea"></path>
+          </marker>
+        </defs>
+
+        <!-- connectors between phases -->
+        <path class="conn" marker-end="url(#arr)" d="M520,94  L520,148"></path>
+        <path class="conn" marker-end="url(#arr)" d="M520,222 L520,276"></path>
+        <path class="conn" marker-end="url(#arr)" d="M520,350 L520,404"></path>
+        <path class="conn" marker-end="url(#arr)" d="M520,478 L520,532"></path>
+        <path class="conn" marker-end="url(#arr)" d="M520,606 L520,660"></path>
+        <path class="conn" marker-end="url(#arr)" d="M520,734 L520,788"></path>
+        <path class="conn" marker-end="url(#arr)" d="M520,862 L520,916"></path>
+
+        <!-- research subagent branch connector -->
+        <path class="conn" marker-end="url(#arr)" d="M740,187 L788,187"></path>
+
+        <!-- autonomous iterate loop -->
+        <path class="loop" marker-end="url(#arrL)" d="M300,955 C150,955 132,910 132,820 L132,250 C132,205 175,187 300,187"></path>
+        <text class="loop-tx" transform="rotate(-90 96 560)" x="96" y="560" text-anchor="middle">Autonomous iterate loop §5.9  ·  improve → research again</text>
+
+        <!-- PHASE 0 -->
+        <g class="node node--plan" style="--c:var(--plan)" tabindex="0" role="button" data-target="phase-0" aria-label="Phase 0 Intake and planning">
+          <rect class="box" x="300" y="24" width="440" height="70" rx="14"></rect>
+          <circle class="badge" cx="336" cy="59" r="20"></circle>
+          <text class="num" x="336" y="59" dy=".35em">0</text>
+          <text class="title" x="372" y="52">Intake &amp; planning</text>
+          <text class="sub" x="372" y="72">trivial vs. implementation · maintain the plan</text>
+        </g>
+
+        <!-- PHASE 1 -->
+        <g class="node node--research" style="--c:var(--research)" tabindex="0" role="button" data-target="phase-1" aria-label="Phase 1 Research">
+          <rect class="box" x="300" y="152" width="440" height="70" rx="14"></rect>
+          <circle class="badge" cx="336" cy="187" r="20"></circle>
+          <text class="num" x="336" y="187" dy=".35em">1</text>
+          <text class="title" x="372" y="180">Research — literature-first</text>
+          <text class="sub" x="372" y="200">papers → citation graph → recipe → example code</text>
+          <rect class="gatepill" x="636" y="162" width="92" height="20" rx="10"></rect>
+          <text class="gatepill-tx" x="682" y="172" dy=".35em">MANDATORY</text>
+        </g>
+
+        <!-- RESEARCH SUBAGENT -->
+        <g class="node sub-node node--research" style="--c:var(--research)" tabindex="0" role="button" data-target="phase-1" aria-label="Research subagent">
+          <rect class="box" x="788" y="152" width="228" height="70" rx="14"></rect>
+          <text class="title" x="804" y="180" style="font-size:13.5px">Research subagent</text>
+          <text class="sub" x="804" y="200">isolated context · read-only · bounded</text>
+        </g>
+
+        <!-- PHASE 2 -->
+        <g class="node node--validate" style="--c:var(--validate)" tabindex="0" role="button" data-target="phase-2" aria-label="Phase 2 Resource discovery and validation">
+          <rect class="box" x="300" y="280" width="440" height="70" rx="14"></rect>
+          <circle class="badge" cx="336" cy="315" r="20"></circle>
+          <text class="num" x="336" y="315" dy=".35em">2</text>
+          <text class="title" x="372" y="308">Resource discovery &amp; validation</text>
+          <text class="sub" x="372" y="328">confirm + inspect model, dataset, hardware</text>
+        </g>
+
+        <!-- PHASE 3 -->
+        <g class="node node--validate" style="--c:var(--validate)" tabindex="0" role="button" data-target="phase-3" aria-label="Phase 3 Data audit">
+          <rect class="box" x="300" y="408" width="440" height="70" rx="14"></rect>
+          <circle class="badge" cx="336" cy="443" r="20"></circle>
+          <text class="num" x="336" y="443" dy=".35em">3</text>
+          <text class="title" x="372" y="436">Data audit</text>
+          <text class="sub" x="372" y="456">schema · stats · validate format ↔ method</text>
+          <rect class="gatepill" x="636" y="418" width="92" height="20" rx="10"></rect>
+          <text class="gatepill-tx" x="682" y="428" dy=".35em">MANDATORY</text>
+        </g>
+
+        <!-- PHASE 4 -->
+        <g class="node node--build" style="--c:var(--build)" tabindex="0" role="button" data-target="phase-4" aria-label="Phase 4 Implementation and preflight">
+          <rect class="box" x="300" y="536" width="440" height="70" rx="14"></rect>
+          <circle class="badge" cx="336" cy="571" r="20"></circle>
+          <text class="num" x="336" y="571" dy=".35em">4</text>
+          <text class="title" x="372" y="564">Implementation &amp; preflight</text>
+          <text class="sub" x="372" y="584">sandbox-first · GPU smoke test</text>
+          <rect class="gatepill" x="650" y="546" width="78" height="20" rx="10"></rect>
+          <text class="gatepill-tx" x="689" y="556" dy=".35em">SMOKE</text>
+        </g>
+
+        <!-- PHASE 5 -->
+        <g class="node node--build" style="--c:var(--build)" tabindex="0" role="button" data-target="phase-5" aria-label="Phase 5 Job submission">
+          <rect class="box" x="300" y="664" width="440" height="70" rx="14"></rect>
+          <circle class="badge" cx="336" cy="699" r="20"></circle>
+          <text class="num" x="336" y="699" dy=".35em">5</text>
+          <text class="title" x="372" y="692">Job submission</text>
+          <text class="sub" x="372" y="712">pre-flight checklist · one-job-first</text>
+          <rect class="gatepill" x="624" y="674" width="104" height="20" rx="10"></rect>
+          <text class="gatepill-tx" x="676" y="684" dy=".35em">CHECKLIST</text>
+        </g>
+
+        <!-- PHASE 6 -->
+        <g class="node node--monitor" style="--c:var(--monitor)" tabindex="0" role="button" data-target="phase-6" aria-label="Phase 6 Monitoring and iteration">
+          <rect class="box" x="300" y="792" width="440" height="70" rx="14"></rect>
+          <circle class="badge" cx="336" cy="827" r="20"></circle>
+          <text class="num" x="336" y="827" dy=".35em">6</text>
+          <text class="title" x="372" y="820">Monitoring &amp; closed-loop iteration</text>
+          <text class="sub" x="372" y="840">structured alerts drive the next config · sweeps</text>
+        </g>
+
+        <!-- PHASE 7 -->
+        <g class="node node--complete" style="--c:var(--complete)" tabindex="0" role="button" data-target="phase-7" aria-label="Phase 7 Evaluation persistence completion">
+          <rect class="box" x="300" y="920" width="440" height="70" rx="14"></rect>
+          <circle class="badge" cx="336" cy="955" r="20"></circle>
+          <text class="num" x="336" y="955" dy=".35em">7</text>
+          <text class="title" x="372" y="948">Evaluation, persistence &amp; completion</text>
+          <text class="sub" x="372" y="968">exists · persisted · evaluated · linked</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- ---------- phase detail accordions ---------- -->
+    <div class="kw-scan" style="margin-top:18px">
+
+      <details class="acc" id="phase-0">
+        <summary><span class="pnum" style="background:var(--plan)">0</span> Phase 0 — Intake &amp; planning <span class="tag" style="color:var(--faint)">§5.1</span><span class="chev">›</span></summary>
+        <div class="body">
+          <ul class="tight">
+            <li>The agent MUST determine whether the request is <b>trivial</b> (skip to a direct answer) or an
+            <b>implementation task</b> (run the full workflow).</li>
+            <li>For any task with <b>three or more steps</b>, the agent MUST create and maintain an explicit
+            <b>plan</b> — ordered to-do items with status <code>pending</code> / <code>in_progress</code> /
+            <code>completed</code>.</li>
+          </ul>
+          <p class="sublabel">Plan discipline (normative)</p>
+          <ul class="tight">
+            <li>Exactly <b>one</b> item is <code>in_progress</code> at any time.</li>
+            <li>An item is marked <code>completed</code> <b>immediately</b> after it genuinely finishes, not batched,
+            and <b>only</b> if it succeeded with no errors.</li>
+            <li>The plan is updated frequently so progress is legible.</li>
+            <li>A failed/blocked item stays <code>in_progress</code> (or <code>pending</code>); a new item is added to
+            resolve the blocker rather than marking the blocked item done.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="acc" id="phase-1">
+        <summary><span class="pnum" style="background:var(--research)">1</span> Phase 1 — Research (literature-first, mandatory) <span class="badge-gate">heart of the workflow</span><span class="chev">›</span></summary>
+        <div class="body">
+          <p>This phase MUST NOT be skipped for implementation tasks. Its goal is to replace stale internal knowledge
+          with a concrete, current, <i>example-grounded</i> recipe before any ML code is written.</p>
+          <p class="sublabel">Default research procedure</p>
+          <ul class="tight">
+            <li>Find the landmark paper(s) for the task or domain.</li>
+            <li>Crawl their <b>citation graph</b> to surface recent downstream work that cites and improves on the anchor.</li>
+            <li>Read the <b>methodology sections</b> of the most promising papers (recent, strong results, well-cited,
+            reputable venue). Read methods, not abstracts.</li>
+            <li>Extract the <b>recipe</b>: dataset, training method, hyperparameters that produced the reported results.
+            Every extracted fact MUST be attributable to a specific result (<i>"dataset X + method Y produced score Z
+            on benchmark B"</i>).</li>
+            <li>Confirm the referenced datasets actually exist and are usable.</li>
+            <li>Find <b>working example code</b> using the <i>current</i> library APIs for the chosen method.</li>
+          </ul>
+          <p class="sublabel">Research subagent contract</p>
+          <ul class="tight">
+            <li><b>Isolation.</b> Deep reading MUST run in a context window separate from the orchestrator's; the
+            orchestrator receives only the subagent's final summary.</li>
+            <li><b>Read-only.</b> MUST NOT submit jobs, write durable artifacts, or mutate state. It only reads
+            (papers, docs, code, dataset metadata) and may do general web retrieval.</li>
+            <li><b>Bounded.</b> Its own iteration cap (ref: ~60 steps), context-budget guard (warn high, hard-stop near
+            the limit and force a summary), and the same repetition guard as the orchestrator.</li>
+            <li><b>Input.</b> A specific task description plus context: goal, known anchor papers / arXiv IDs, and what
+            the orchestrator needs. Name anchors when known.</li>
+            <li><b>Output (bounded, structured, ~500–1500 words):</b> a ranked <b>recipe table</b>
+            (paper → result → dataset → method → key hyperparameters → key insight); <b>code patterns</b> (correct
+            imports, config/trainer arguments, current-API snippets); a short <b>state-of-the-art landscape</b>; and
+            <b>essential references</b> with links.</li>
+          </ul>
+          <div class="note">The orchestrator MAY perform quick, shallow lookups directly (a single doc page, one repo's
+          details). The subagent is for <i>deep</i> multi-source research. Research is skipped only for simple factual
+          questions, status checks, and pure resource discovery — <b>never</b> because a task "seems simple".</div>
+          <div class="chips">
+            <a class="chip c" href="#C3">C3 papers</a><a class="chip c" href="#C4">C4 citation graph</a>
+            <a class="chip c" href="#C5">C5 docs</a><a class="chip c" href="#C6">C6 example code</a>
+            <a class="chip c" href="#C13">C13 web</a>
+            <a class="chip" href="#P1">Principle 1</a><a class="chip r" href="#R11">R11</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" id="phase-2">
+        <summary><span class="pnum" style="background:var(--validate)">2</span> Phase 2 — Resource discovery &amp; validation <span class="tag" style="color:var(--faint)">§5.3</span><span class="chev">›</span></summary>
+        <div class="body">
+          <p>Before implementing, the agent MUST establish concrete, verified resources.</p>
+          <ul class="tight">
+            <li><b>Model.</b> If named, confirm it exists and inspect it (architecture, size, tokenizer, license,
+            suitability). If not named, evaluate a few candidates (ref: 3–5) and select on
+            task-fit / quality / size / cost. The agent MUST NOT silently substitute a different model; if the
+            requested one is unusable, it says so and asks.</li>
+            <li><b>Dataset.</b> Same: confirm existence and inspect. <b>Format-to-method compatibility MUST be
+            validated here</b> (see Phase 3).</li>
+            <li><b>Hardware.</b> Choose compute sized to the model footprint. Do not default to the most expensive tier
+            without justification, and do not undersize.</li>
+          </ul>
+          <div class="chips">
+            <a class="chip c" href="#C1">C1 hub search</a><a class="chip c" href="#C2">C2 dataset inspect</a>
+            <a class="chip" href="#P2">Principle 2</a><a class="chip" href="#P5">Principle 5</a>
+            <a class="chip r" href="#R6">R6 sizing</a><a class="chip r" href="#R8">R8 no substitution</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" id="phase-3">
+        <summary><span class="pnum" style="background:var(--validate)">3</span> Phase 3 — Data audit <span class="badge-gate">mandatory before using any dataset</span><span class="chev">›</span></summary>
+        <div class="body">
+          <p>The agent MUST inspect a dataset before working with it and MUST NOT assume its shape.</p>
+          <ul class="tight">
+            <li><b>Inspect:</b> schema/columns, rows per split, value distributions for key columns, sample rows.</li>
+            <li><b>Surface anything notable:</b> class imbalance, missing values, unexpected formats, outliers, duplicates.</li>
+            <li><b>Validate format against the training method</b> — training fails fast on schema mismatch:</li>
+          </ul>
+          <div class="tbl-scroll" style="max-width:560px">
+            <table>
+              <thead><tr><th>Method</th><th>Required fields</th></tr></thead>
+              <tbody>
+                <tr><td class="id">SFT</td><td><code>messages</code>, or <code>text</code>, or <code>prompt</code>+<code>completion</code></td></tr>
+                <tr><td class="id">DPO</td><td><code>prompt</code>, <code>chosen</code>, <code>rejected</code></td></tr>
+                <tr><td class="id">GRPO</td><td><code>prompt</code></td></tr>
+                <tr><td class="id">Other</td><td>confirm the documented schema during research</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note">If the requested dataset cannot be loaded, the agent MUST tell the user and ask rather than
+          silently substituting another.</div>
+          <div class="chips">
+            <a class="chip c" href="#C2">C2 dataset inspect</a>
+            <a class="chip" href="#P2">Principle 2</a>
+            <a class="chip r" href="#R8">R8</a><a class="chip r" href="#R9">R9</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" id="phase-4">
+        <summary><span class="pnum" style="background:var(--build)">4</span> Phase 4 — Implementation &amp; preflight (sandbox-first) <span class="badge-gate">GPU smoke test</span><span class="chev">›</span></summary>
+        <div class="body">
+          <p>Code is written from the research findings (Phase 1), not from memory.</p>
+          <ul class="tight">
+            <li><b>Sandbox-first development.</b> Non-trivial scripts MUST be developed and tested in a disposable
+            sandbox before launching at scale: <code>write → install deps → run small → fix → scale up</code>.</li>
+            <li><b>GPU preflight smoke test (mandatory for GPU work).</b> If the job will run on GPU <i>or</i> the script
+            loads a model / exercises a GPU code path (CUDA, mixed precision, quantization, fused/optimized attention,
+            graph compilation), the agent MUST run a <b>tiny smoke test on representative hardware</b> — same imports,
+            same model-loading path, same training entrypoint, a tiny subset — then fix any failure before scaling.
+            CPU-only execution cannot validate GPU code paths.</li>
+            <li>If preflight hardware cannot fit the full path, test the largest useful subset, <b>state what was not
+            covered</b>, and submit one full job first (Phase 5).</li>
+          </ul>
+          <div class="note">The smoke test exists to catch, cheaply, the exact failures that otherwise surface hours into
+          an expensive run: bad imports, wrong arguments, schema mismatch, and out-of-memory.</div>
+          <div class="chips">
+            <a class="chip c" href="#C7">C7 sandbox</a>
+            <a class="chip" href="#P3">Principle 3</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" id="phase-5">
+        <summary><span class="pnum" style="background:var(--build)">5</span> Phase 5 — Job submission (managed compute) <span class="badge-gate">pre-flight checklist</span><span class="chev">›</span></summary>
+        <div class="body">
+          <ul class="tight">
+            <li><b>Code must reach the remote environment by value.</b> A managed job runs in a fresh environment with no
+            access to local paths. The script MUST be supplied as inline source, a file written into the job's own
+            environment, or a public URL. Local checkout paths MUST NOT be passed.</li>
+          </ul>
+          <p class="sublabel">Pre-flight checklist — MUST be satisfiable and stated before launch</p>
+          <ul class="tight">
+            <li><b>Reference implementation</b> — which researched example this is based on.</li>
+            <li><b>Dataset format verified</b> — columns confirmed (Phase 3).</li>
+            <li><b>GPU smoke test</b> — hardware + result, or an explicit reason it is not applicable.</li>
+            <li><b>Persistence configured</b> — durable push enabled with a concrete destination id. Without this the
+            trained artifact is lost when the environment is torn down.</li>
+            <li><b>Timeout set to the work, not the default.</b></li>
+            <li><b>Monitoring included</b> — tracker wired in and publishing to a live dashboard.</li>
+          </ul>
+          <div class="note"><b>One-job-first for batches/ablations/sweeps.</b> The agent MUST submit a <b>single</b> job,
+          confirm from its logs that it actually starts running/training correctly, and only then submit the rest. It
+          MUST NOT submit a whole batch at once (they would all fail on the same bug). After submission, poll logs to
+          confirm the job is healthy, then report monitoring links.</div>
+          <div class="chips">
+            <a class="chip c" href="#C8">C8 managed jobs</a><a class="chip c" href="#C11">C11 storage</a>
+            <a class="chip" href="#P4">Principle 4</a>
+            <a class="chip r" href="#R1">R1</a><a class="chip r" href="#R5">R5 timeout</a><a class="chip r" href="#R6">R6 sizing</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" id="phase-6">
+        <summary><span class="pnum" style="background:var(--monitor)">6</span> Phase 6 — Monitoring &amp; closed-loop iteration <span class="tag" style="color:var(--faint)">§5.7</span><span class="chev">›</span></summary>
+        <div class="body">
+          <p>Monitoring is not passive logging; it is the <b>decision channel</b> that drives the next iteration.</p>
+          <p class="sublabel">Structured alerts at decision points (numeric values + actionable suggestion)</p>
+          <ul class="tight">
+            <li><b style="color:var(--must)">ERROR</b> — stop and change approach (divergence, NaN, OOM).</li>
+            <li><b style="color:var(--should)">WARN</b> — tweak hyperparameters (overfitting, early-stopping signal, KL
+            spike, reward collapse, slow convergence).</li>
+            <li><b style="color:var(--complete)">INFO</b> — milestones (training complete, target reached, checkpoint saved).</li>
+          </ul>
+          <div class="note">Example alert text: <code>"loss=12.4 at step 200 — lr likely too high, try x0.1"</code> — a
+          later step MUST be able to parse it and act.</div>
+          <p class="sublabel">Reference decision policy (read alerts back, not raw metric points)</p>
+          <ul class="tight">
+            <li>diverged → learning-rate × 0.1</li>
+            <li>overfitting → weight-decay × 10, or reduce capacity</li>
+            <li>early-stopping signal → learning-rate × 0.5, or adjust schedule</li>
+            <li>high accuracy → refine around the current config</li>
+          </ul>
+          <p>The agent mutates only the keys the alerts justify changing; it reads the prior config and changes the
+          minimum. <b>Sweeps, not hand-tuning</b> — hyperparameter exploration MUST be done by launching a sweep over a
+          grid and evaluating each run automatically, not by editing one value at a time.</p>
+          <div class="chips">
+            <a class="chip c" href="#C10">C10 tracking + alerts</a>
+            <a class="chip r" href="#R3">R3 minimal fix</a><a class="chip r" href="#R4">R4 no scope change</a>
+            <a class="chip r" href="#R7">R7 OOM recovery</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" id="phase-7">
+        <summary><span class="pnum" style="background:var(--complete)">7</span> Phase 7 — Evaluation, persistence &amp; completion <span class="tag" style="color:var(--faint)">§5.8</span><span class="chev">›</span></summary>
+        <div class="body">
+          <p>A task is <b>not done</b> until:</p>
+          <ul class="tight">
+            <li>The required output exists (final model / reached metric / updated dataset).</li>
+            <li>The output is <b>persisted to durable storage</b>.</li>
+            <li>The model has been <b>evaluated and confirmed to work</b> (not merely produced).</li>
+            <li>For training runs, a working monitoring dashboard URL has been provided.</li>
+          </ul>
+          <div class="note">Before ending a turn the agent MUST verify it actually <i>did</i> the task (not just
+          described it), that any failure was diagnosed and fixed (or clearly explained with a request for input), and
+          that all referenced artifacts are linked by direct URL. It MUST NOT mark plan items completed if they failed
+          or are partial.</div>
+          <div class="chips">
+            <a class="chip c" href="#C11">C11 storage</a><a class="chip c" href="#C12">C12 evaluation</a>
+            <a class="chip" href="#P4">Principle 4</a>
+            <a class="chip r" href="#R14">R14 links</a>
+          </div>
+        </div>
+      </details>
+
+      <details class="acc" id="phase-auto">
+        <summary><span class="pnum" style="background:var(--monitor)">∞</span> Autonomous / headless loop discipline <span class="tag" style="color:var(--faint)">§5.9</span><span class="chev">›</span></summary>
+        <div class="body">
+          <p>When running with no human in the loop (fixed time/compute budget, no one to re-prompt):</p>
+          <ul class="tight">
+            <li><b>Every step makes progress via an action.</b> A response that performs no action ends the loop with no
+            way to resume; the agent MUST always take a next action (work the plan, verify outputs, or plan ahead)
+            rather than returning idle text.</li>
+            <li><b>Do not stop early.</b> While budget remains, the agent MUST keep improving and MUST NOT declare itself
+            "done" or ask whether to continue. There is no one to answer.</li>
+            <li><b>Iterate as a loop, not a checklist.</b> After a working result, keep going:
+            <code>research → implement → train/evaluate → persist → improve → research again</code>.</li>
+            <li><b>When out of ideas, go back to the literature.</b> Crawl citation graphs deeper, read unread papers,
+            combine recipes, re-read the task and training logs for missed angles.</li>
+            <li><b>Budget time explicitly.</b> Check remaining budget periodically and <b>reserve a margin</b> at the end
+            (ref: ~10 minutes) for final evaluation and saving, so the loop never ends with an unsaved or unevaluated
+            result.</li>
+            <li>Out-of-band notifications are used <b>only</b> when the user asked for them or the task clearly requires
+            reporting to a configured destination — not for routine chatter.</li>
+          </ul>
+          <div class="chips"><a class="chip c" href="#C14">C14 notifications</a></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===================== ROLES ===================== -->
+  <section id="roles">
+    <div class="sec-head"><h2>Roles &amp; components</h2><span class="tag">§3 · abstract</span></div>
+    <p class="sec-sub">The workflow is defined over these abstract roles. An implementation MAY collapse or split them,
+    but the responsibilities MUST exist somewhere.</p>
+    <div class="grid g2 kw-scan">
+      <div class="card"><h3>Orchestrator</h3><p>Drives the phases, maintains the plan, enforces the rules and the
+        control contract, and decides what to do next. Owns the main conversation/context.</p></div>
+      <div class="card"><h3>Research subagent</h3><p>A <i>separately-contexted</i> worker that performs literature and
+        documentation mining and returns a compact, structured summary, keeping the orchestrator's context clean. See
+        Phase 1.</p></div>
+      <div class="card"><h3>Execution surface</h3><p>The capabilities that act on the outside world: resource
+        discovery/inspection, sandbox code execution, managed job submission and monitoring, durable storage. Provided
+        by <code>hf-skills</code>.</p></div>
+      <div class="card"><h3>Tracker</h3><p>The experiment-tracking capability used both to <i>record</i> metrics and to
+        <i>emit and read back structured alerts</i> that drive iteration decisions (Phase 6).</p></div>
+      <div class="card"><h3>Plan</h3><p>An explicit, ordered, mutable to-do list that makes progress legible and
+        decomposes multi-step work (Phase 0).</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== CAPABILITIES ===================== -->
+  <section id="caps">
+    <div class="sec-head"><h2>Capability requirements</h2><span class="tag">§4 · C1–C14</span></div>
+    <p class="sec-sub">The abstract capabilities the workflow requires. Each MUST be satisfiable by <code>hf-skills</code>
+    (or the host harness). Appendix A gives the concrete mapping and flags the gaps.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>#</th><th>Abstract capability</th><th>Required for</th></tr></thead>
+        <tbody>
+          <tr id="C1"><td class="id">C1</td><td>Search the model/dataset hub; fetch repo details</td><td>Resource discovery &amp; validation</td></tr>
+          <tr id="C2"><td class="id">C2</td><td>Inspect a dataset: schema, columns, splits, sample rows, statistics</td><td>Data audit (Phase 3)</td></tr>
+          <tr id="C3"><td class="id">C3</td><td>Search and read research papers; follow links to code/datasets</td><td>Research (Phase 1)</td></tr>
+          <tr id="C4"><td class="id">C4</td><td>Trace citation graphs (references and forward citations)</td><td>Deep research <span class="gapflag">partial gap</span></td></tr>
+          <tr id="C5"><td class="id">C5</td><td>Search/retrieve current library documentation</td><td>Research, implementation</td></tr>
+          <tr id="C6"><td class="id">C6</td><td>Find and read working example code</td><td>Research, implementation</td></tr>
+          <tr id="C7"><td class="id">C7</td><td>Execute code in a disposable sandbox (CPU and GPU tiers)</td><td>Preflight (Phase 4) <span class="gapflag">partial gap</span></td></tr>
+          <tr id="C8"><td class="id">C8</td><td>Submit, configure, monitor, and cancel managed compute jobs</td><td>Job execution (Phase 5)</td></tr>
+          <tr id="C9"><td class="id">C9</td><td>Train/fine-tune models with standard methods (SFT/DPO/GRPO, etc.)</td><td>Implementation</td></tr>
+          <tr id="C10"><td class="id">C10</td><td>Record metrics and emit/read structured training alerts</td><td>Monitoring &amp; iteration (Phase 6)</td></tr>
+          <tr id="C11"><td class="id">C11</td><td>Durable storage for models, datasets, logs, results</td><td>Persistence (Principle 4)</td></tr>
+          <tr id="C12"><td class="id">C12</td><td>Evaluate a model on a benchmark/task</td><td>Completion (Phase 7)</td></tr>
+          <tr id="C13"><td class="id">C13</td><td>General web/document retrieval</td><td>Research fallback <span class="gapflag">gap · host harness</span></td></tr>
+          <tr id="C14"><td class="id">C14</td><td>Out-of-band notification (optional)</td><td>Reporting (§5.9) <span class="gapflag">gap · host harness</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== HARD RULES ===================== -->
+  <section id="rules">
+    <div class="sec-head"><h2>Hard rules &amp; invariants</h2><span class="tag">§6 · R1–R14</span></div>
+    <p class="sec-sub">The non-negotiable rules. They restate the principles as concrete prohibitions and requirements.</p>
+    <div class="kw-scan">
+      <div class="group-h">§6.1 Persistence</div>
+      <div class="grid g2">
+        <div class="rule" id="R1"><span class="rid">R1</span> Any artifact that must outlive the run MUST be pushed to durable storage <i>as part of the run</i>, with a concrete destination id set before launch. "I'll grab it after" is not available.</div>
+        <div class="rule" id="R2"><span class="rid">R2</span> Outputs that cannot be pushed by the training process itself (logs, scripts, side artifacts) MUST be uploaded to durable storage explicitly.</div>
+      </div>
+      <div class="group-h">§6.2 No scope-changing fixes</div>
+      <div class="grid g2">
+        <div class="rule" id="R3"><span class="rid">R3</span> On error, the agent MUST apply the <b>minimal</b> fix that preserves the user's original request, grounded in research/examples.</div>
+        <div class="rule" id="R4"><span class="rid">R4</span> The agent MUST NOT, to escape an error, change the training method, reduce sequence length, switch dataset/model, or disable monitoring. If the original approach genuinely cannot work, it explains why and asks the user first.</div>
+      </div>
+      <div class="group-h">§6.3 Timeouts · §6.4 Hardware sizing</div>
+      <div class="grid g2">
+        <div class="rule" id="R5"><span class="rid">R5</span> The agent MUST set a job timeout sized to the actual work and MUST NOT leave the short interactive default. Ref: small ~2–4h, mid ~4–8h, large ~8–24h.</div>
+        <div class="rule" id="R6"><span class="rid">R6</span> Compute MUST be sized to the model footprint. Ref: ~1–3B → small single-GPU; ~7–13B → large single-GPU; ~30B → multi-GPU/large-memory; ~70B+ → multi-GPU high-memory. Memory, not the tier's name, is what matters.</div>
+      </div>
+      <div class="group-h">§6.5 Out-of-memory recovery</div>
+      <div class="grid">
+        <div class="rule" id="R7"><span class="rid">R7</span> On OOM the agent MUST, in order: (1) reduce per-device batch size and increase gradient accumulation proportionally to <b>keep the effective batch size identical</b>; (2) enable gradient checkpointing; (3) move to larger-memory hardware. It MUST NOT switch training method or reduce sequence length to resolve OOM.</div>
+      </div>
+      <div class="group-h">§6.6 Resource integrity</div>
+      <div class="grid g2">
+        <div class="rule" id="R8"><span class="rid">R8</span> The agent MUST NOT silently substitute a dataset or model. If a requested resource is unavailable, it tells the user and asks.</div>
+        <div class="rule" id="R9"><span class="rid">R9</span> Schema/columns/format MUST be verified by inspection before use; the agent MUST NOT assume them.</div>
+      </div>
+      <div class="group-h">§6.7 Error recovery (general)</div>
+      <div class="grid g2">
+        <div class="rule" id="R10"><span class="rid">R10</span> On failure the agent reads the full error/log, diagnoses the actual cause, and changes something specific. It MUST NOT retry the identical action unchanged; if a call fails repeatedly for the same reason, it tries a fundamentally different approach.</div>
+        <div class="rule" id="R11"><span class="rid">R11</span> API/import errors are resolved by re-checking current documentation and examples, not by guessing.</div>
+      </div>
+      <div class="group-h">§6.8 Build cost discipline · §6.9 Secrets &amp; links</div>
+      <div class="grid g3">
+        <div class="rule" id="R12"><span class="rid">R12</span> The agent SHOULD prefer prebuilt/managed components over compiling heavy dependencies from source inside a job. Extra build steps are taken only when nothing prebuilt covers the need, with the reason documented.</div>
+        <div class="rule" id="R13"><span class="rid">R13</span> Credentials are taken from the environment and never logged or exposed.</div>
+        <div class="rule" id="R14"><span class="rid">R14</span> Every referenced model, dataset, paper, job, or dashboard MUST be given as a direct URL.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONTROL CONTRACT ===================== -->
+  <section id="contract">
+    <div class="sec-head"><h2>Harness control contract</h2><span class="tag">§7 · keeps the loop bounded &amp; unstuck</span></div>
+    <p class="sec-sub">These rules govern the <i>loop itself</i> — they keep an autonomous agent bounded, unstuck, and
+    within its context budget. Independent of the ML domain; enforced by the host harness or hooks. Numbers are
+    reference defaults.</p>
+    <div class="kw-scan">
+      <details class="acc"><summary>§7.1 Bounded iteration<span class="chev">›</span></summary><div class="body">
+        The main loop MUST be bounded by a maximum iteration count (configurable; unbounded only by explicit opt-in). It
+        exits when the model returns no further actions <b>and</b> no plan item remains unfinished, on user
+        cancellation, or on unrecoverable error.</div></details>
+      <details class="acc"><summary>§7.2 Repetition / "doom-loop" guard<span class="chev">›</span></summary><div class="body">
+        The harness MUST detect a stuck agent and inject a corrective instruction, over a recent window (ref: last ~30
+        actions):
+        <ul class="tight">
+          <li><b>Identical repetition:</b> same action + same arguments repeated (ref: 3 in a row) → "stop repeating
+          this, try a fundamentally different strategy".</li>
+          <li><b>Cyclic repetition:</b> a short sequence (ref length 2–5) repeated (ref: ≥2 full cycles) → "you are in a
+          repeating cycle, break it".</li>
+        </ul>
+        Action signatures SHOULD incorporate the action's <i>result</i> as well as its arguments, so legitimate polling
+        (same call, changing result) is not misclassified.</div></details>
+      <details class="acc"><summary>§7.3 Continuation guard<span class="chev">›</span></summary><div class="body">
+        If the model produces <b>no action</b> while the plan still has unfinished items, the harness MUST NOT
+        immediately hand control back to the user. It injects a continuation prompt ("the task is not complete, take at
+        least one action now") and retries a small number of times (ref: 2) before yielding. Any action resets the
+        counter.</div></details>
+      <details class="acc"><summary>§7.4 Malformed-action guard<span class="chev">›</span></summary><div class="body">
+        A short streak of malformed actions for the same tool (ref: 2 in a row) MUST trigger a corrective injection
+        ("stop retrying, use a different strategy") rather than letting the agent grind.</div></details>
+      <details class="acc"><summary>§7.5 Output-truncation recovery<span class="chev">›</span></summary><div class="body">
+        If a model response is cut off by the output limit, the harness MUST NOT have the agent blindly resend the same
+        oversized payload; it injects guidance to use a different mechanism (e.g. write large content via a file/heredoc
+        rather than inline) and retries.</div></details>
+      <details class="acc"><summary>§7.6 Context compaction<span class="chev">›</span></summary><div class="body">
+        The harness MUST keep working context within the model's window by compacting when usage crosses a high-water
+        mark (ref: ~90%). Compaction MUST preserve the system instructions, the <b>original task message</b>, and a
+        <b>recent tail</b> (ref: ~5 messages); the middle is summarized into a single record. Oversized individual
+        messages MAY be truncated with a placeholder (ref cap: ~50k tokens/message), except the system message.
+        Compaction MUST be bounded: if it cannot bring usage under threshold, the session terminates cleanly rather than
+        retrying forever.</div></details>
+      <details class="acc"><summary>§7.7 Approval gate<span class="chev">›</span></summary><div class="body">
+        Outward-facing or costly/destructive actions MUST pass an approval policy:
+        <ul class="tight">
+          <li><b>Auto-approved:</b> read-only research, inspection, discovery; routine code execution in the default
+          low-cost sandbox; status/metadata queries.</li>
+          <li><b>Approval-required:</b> provisioning non-default (GPU/larger) compute; submitting paid compute jobs;
+          destructive storage operations (delete repo, delete branch/tag, merge, force-upload/overwrite); creating
+          durable repos.</li>
+          <li><b>Always human-gated:</b> recurring/scheduled jobs (a standing cost commitment) require explicit human
+          approval even under otherwise-autonomous policies.</li>
+        </ul>
+        An autonomous mode MAY auto-approve the approval-required class <b>up to a cost cap</b>, tracking estimated spend
+        across the batch. Scheduled/recurring commitments remain human-gated regardless.</div></details>
+      <details class="acc"><summary>§7.8 Effort / budget probing<span class="chev">›</span></summary><div class="body">
+        The harness MAY tune the model's reasoning effort to the highest level the selected model supports, degrading
+        gracefully when a level is rejected, and SHOULD do so cheaply (a tiny probe) and cache the result per model.
+        This is a quality/cost optimization and is non-normative for the ML workflow itself.</div></details>
+    </div>
+  </section>
+
+  <!-- ===================== STATE ===================== -->
+  <section id="state">
+    <div class="sec-head"><h2>State &amp; artifacts</h2><span class="tag">§8</span></div>
+    <p class="sec-sub">Across the workflow the agent maintains:</p>
+    <div class="grid g2 kw-scan">
+      <div class="card"><h3>The plan</h3><p>The live decomposition and progress (Phase 0).</p></div>
+      <div class="card"><h3>Research findings</h3><p>The recipe table, code patterns, references that ground
+        implementation — the authority later phases cite (Phase 1).</p></div>
+      <div class="card"><h3>Validated resources</h3><p>Confirmed model, dataset (with verified schema), and chosen
+        hardware (Phases 2–3).</p></div>
+      <div class="card"><h3>Run records</h3><p>Job ids, configs, tracker project/run names, dashboard URLs, and the
+        alert history that drives iteration (Phases 5–6).</p></div>
+      <div class="card"><h3>Durable outputs</h3><p>The persisted model/dataset/logs and evaluation results, each linked
+        by URL (Phase 7).</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== COMPLETION ===================== -->
+  <section id="done">
+    <div class="sec-head"><h2>Completion criteria</h2><span class="tag">§9 · conformance summary</span></div>
+    <p class="sec-sub">An execution conforms to this spec if, for an ML implementation request:</p>
+    <div class="kw-scan">
+      <ul class="tight">
+        <li>Research preceded implementation, and the implementation cites concrete findings (Principle 1, Phase 1).</li>
+        <li>Resources were verified by inspection, including dataset-format-to-method compatibility (Principle 2, Phases 2–3).</li>
+        <li>GPU code was smoke-tested before scaling, or the omission was justified (Principle 3, Phase 4).</li>
+        <li>The pre-flight checklist was satisfied before any job, batches went one-job-first, and durable persistence was configured up front (Phase 5, Principle 4).</li>
+        <li>Monitoring emitted structured alerts and the next iteration was driven by them (Phase 6).</li>
+        <li>The result was persisted and evaluated, and all artifacts were linked (Phase 7).</li>
+        <li>No rule in §6 was violated; in particular no silent scope change or resource substitution occurred.</li>
+        <li>The loop stayed bounded and unstuck under the control contract (§7).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== APPENDICES ===================== -->
+  <section id="appendix">
+    <div class="sec-head"><h2>Appendices</h2><span class="tag">A: mapping (informative) · B: realization (non-normative)</span></div>
+
+    <details class="acc kw-scan"><summary><b>Appendix A</b> — Capability → <code>hf-skills</code> mapping (informative)<span class="chev">›</span></summary>
+      <div class="body">
+        <p>How the abstract capabilities of §4 are satisfied by <code>hf-skills</code>. The skill names are the
+        execution surface — <b>do not reimplement them</b>.</p>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>Cap</th><th>Provided by (hf-skills)</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="id">C1</td><td><code>hf-cli</code> (models/datasets list/info), <code>huggingface-best</code>, hub MCP tools</td><td>Model/dataset discovery &amp; validation.</td></tr>
+              <tr><td class="id">C2</td><td><code>huggingface-datasets</code> (Dataset Viewer), trainer-skill validation helpers</td><td>Schema, splits, samples, stats. Satisfies the §5.4 audit.</td></tr>
+              <tr><td class="id">C3</td><td><code>huggingface-papers</code>, <code>hf-cli</code> papers, <code>huggingface-paper-publisher</code></td><td>Read methodology from the markdown; follow linked artifacts.</td></tr>
+              <tr><td class="id">C4</td><td><b>Partial gap.</b> <code>huggingface-papers</code> exposes linked artifacts but not a full citations graph.</td><td>Crawl downstream work via paper-page links + host web retrieval (C13); accept reduced fidelity and say so.</td></tr>
+              <tr><td class="id">C5</td><td>Companion doc tools (<code>hf_doc_search</code> / <code>hf_doc_fetch</code>)</td><td>Current TRL/Transformers/etc. APIs.</td></tr>
+              <tr><td class="id">C6</td><td>Trainer skills ship reference scripts; host harness can read repos</td><td>Prefer copying production templates over synthesizing.</td></tr>
+              <tr><td class="id">C7</td><td><b>Partial gap.</b> No drop-in GPU-sandbox skill.</td><td>Realize §5.5 preflight as a short, cheap job (C8) on a small GPU flavor with a tiny subset, or a local GPU smoke test via <code>huggingface-community-evals</code> (<code>--limit</code>).</td></tr>
+              <tr><td class="id">C8</td><td><code>hf-cli</code> (jobs run/inspect/logs/cancel, scheduled jobs), <code>hf_jobs</code></td><td>Set timeout (R5), flavor (R6), env/secrets, persistence.</td></tr>
+              <tr><td class="id">C9</td><td><code>huggingface-llm-trainer</code>, <code>huggingface-vision-trainer</code>, <code>train-sentence-transformers</code></td><td>Method ↔ data-shape rules in §5.4 align with these skills.</td></tr>
+              <tr><td class="id">C10</td><td><code>huggingface-trackio</code> (init/log/alert/finish, CLI <code>--json</code>, Space dashboards)</td><td>This <i>is</i> the §5.7 decision channel.</td></tr>
+              <tr><td class="id">C11</td><td><code>hf-cli</code> (upload/repos/buckets), trainers' <code>push_to_hub</code>, datasets upload</td><td>Satisfies R1/R2.</td></tr>
+              <tr><td class="id">C12</td><td><code>huggingface-community-evals</code> (inspect-ai / lighteval), trainer eval hooks</td><td>Satisfies §5.8 "evaluated and confirmed".</td></tr>
+              <tr><td class="id">C13</td><td><b>Gap in hf-skills.</b> Source from the host harness's web search/fetch.</td><td>Used by research (C4 fallback) and non-HF docs.</td></tr>
+              <tr><td class="id">C14</td><td><b>Gap in hf-skills.</b> Source from the host harness (messaging) if needed.</td><td>Optional; gated per §5.9.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note"><b>Gaps to handle explicitly:</b> C4 (full citation graph), C7 (dedicated GPU sandbox),
+        C13 (general web), C14 (notifications). For each, the spec keeps the <i>rule</i> and lets the implementer
+        satisfy it with the nearest mechanism, stating any reduced fidelity.</div>
+      </div>
+    </details>
+
+    <details class="acc kw-scan"><summary><b>Appendix B</b> — Realizing the workflow as skills / subagents / hooks (non-normative)<span class="chev">›</span></summary>
+      <div class="body">
+        <p><b>Illustrative only.</b> The intent of the split: <code>hf-skills</code> provides the doing, and the
+        researcher provides only the discipline — phase ordering, verification gates, persistence and
+        anti-scope-change rules, and loop guards.</p>
+        <ul class="tight">
+          <li><b>Driving skill(s).</b> Encode the phase order and gate conditions (§5) as the researcher's top-level
+          procedure: research → validate → audit → preflight → submit → monitor → iterate → evaluate, delegating each
+          concrete action to the relevant <code>hf-skill</code>.</li>
+          <li><b>Research subagent.</b> Implement §5.2 as a separate subagent with its own context and a read-only
+          toolset. Return schema = recipe table + code patterns + references. This is the one place a subagent is
+          structurally required (context isolation).</li>
+          <li><b>Hooks for the control contract (§7) and hard gates (§6)</b> — enforced not merely requested:
+            <ul class="tight">
+              <li><i>Pre-job hook:</i> refuse a job unless the §5.6 pre-flight checklist is satisfied; refuse local paths in scripts.</li>
+              <li><i>Batch hook:</i> allow only one job from a batch until its logs confirm a healthy start.</li>
+              <li><i>Repetition / continuation / malformed guards:</i> the §7.2–7.4 detectors.</li>
+              <li><i>Compaction hook:</i> the §7.6 policy. <i>Approval hook:</i> the §7.7 policy.</li>
+            </ul>
+          </li>
+          <li><b>Plan/tracker.</b> Use the host harness's todo mechanism for the §5.1 plan, and
+          <code>huggingface-trackio</code> for the §5.7 alert-driven loop.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+</main>
+
+<footer>
+  Interactive rendering of <code>docs/ml-research-workflow-spec.md</code> — a technology-neutral behavioral
+  specification derived from the workflow encoded in <code>ml-intern</code>, realized on
+  <code>hf-skills</code>. Normative keywords highlighted: <span class="kw kw-must">MUST</span> /
+  <span class="kw kw-should">SHOULD</span> / <span class="kw kw-may">MAY</span>. Reference numbers are tunable.
+</footer>
+
+<button class="totop" id="totop" aria-label="Back to top">↑</button>
+
+<script>
+(function(){
+  /* ---- normative keyword highlighting (text nodes inside .kw-scan only) ---- */
+  function highlight(root){
+    var re=/\b(MUST NOT|MUST|SHOULD NOT|SHOULD|MAY)\b/g;
+    var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
+      acceptNode:function(n){
+        if(!n.nodeValue||!re.test(n.nodeValue)){re.lastIndex=0;return NodeFilter.FILTER_REJECT;}
+        re.lastIndex=0;
+        var p=n.parentNode;
+        if(!p) return NodeFilter.FILTER_REJECT;
+        var tag=p.nodeName;
+        if(tag==='SCRIPT'||tag==='STYLE'||tag==='CODE'||p.classList.contains('kw')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node){
+      var s=node.nodeValue, frag=document.createDocumentFragment(), last=0, m;
+      re.lastIndex=0;
+      while((m=re.exec(s))){
+        if(m.index>last) frag.appendChild(document.createTextNode(s.slice(last,m.index)));
+        var span=document.createElement('span'), t=m[1];
+        span.className='kw '+(t.indexOf('MUST')===0?'kw-must':t.indexOf('SHOULD')===0?'kw-should':'kw-may');
+        span.textContent=t;
+        frag.appendChild(span);
+        last=m.index+m[0].length;
+      }
+      if(last<s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+      node.parentNode.replaceChild(frag,node);
+    });
+  }
+  document.querySelectorAll('.kw-scan').forEach(highlight);
+
+  /* ---- SVG phase nodes -> open + scroll + flash the matching detail ---- */
+  function openAncestors(el){
+    var d=el.closest('details');
+    while(d){ d.open=true; d=d.parentElement&&d.parentElement.closest('details'); }
+  }
+  function flash(el){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+  function reveal(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    if(el.tagName==='DETAILS') el.open=true;
+    openAncestors(el);
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    flash(el);
+  }
+  document.querySelectorAll('.node[data-target]').forEach(function(g){
+    function act(){ reveal(g.getAttribute('data-target')); }
+    g.addEventListener('click',act);
+    g.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();act();} });
+  });
+
+  /* ---- chips / in-page anchors -> open ancestors + flash ---- */
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href^="#"]');
+    if(!a) return;
+    var id=a.getAttribute('href').slice(1);
+    if(!id) return;
+    var el=document.getElementById(id);
+    if(!el) return;
+    e.preventDefault();
+    reveal(id);
+    history.replaceState(null,'',a.getAttribute('href'));
+  });
+
+  /* ---- back to top ---- */
+  var btn=document.getElementById('totop');
+  window.addEventListener('scroll',function(){
+    btn.classList.toggle('show', window.scrollY>600);
+  });
+  btn.addEventListener('click',function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+})();
+</script>
+</body>
+</html>
