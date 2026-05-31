@@ -2,8 +2,6 @@
 date: 2026-05-31
 authors:
   - martin
-categories:
-  - Agentic workflows
 ---
 
 # Building an autonomous ML researcher with Claude Code dynamic workflows
